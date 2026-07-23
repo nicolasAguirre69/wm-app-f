@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\TipoIsp;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Isp extends Model
@@ -41,5 +42,16 @@ class Isp extends Model
             'tipo' => TipoIsp::class,
             'activo' => 'boolean',
         ];
+    }
+
+    /**
+     * Relación: los usuarios que pertenecen a este ISP.
+     *
+     * hasMany es la inversa de belongsTo: un ISP tiene muchos usuarios.
+     * Permite escribir $isp->users para obtener la colección de usuarios.
+     */
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class);
     }
 }
