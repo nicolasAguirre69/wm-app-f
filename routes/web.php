@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CiudadController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -11,6 +12,11 @@ Route::middleware(['auth', 'isp.active'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
+
+    // CRUD de Ciudades (sin 'show': catálogo simple).
+    Route::resource('ciudades', CiudadController::class)
+        ->parameters(['ciudades' => 'ciudad'])
+        ->except('show');
 });
 
 require __DIR__.'/settings.php';
