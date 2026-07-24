@@ -15,11 +15,9 @@ class CiudadController extends Controller
 {
     /**
      * Inyección de dependencias: Laravel construye y pasa el CiudadService.
-     * authorizeResource conecta cada método con su método en CiudadPolicy.
      */
     public function __construct(private CiudadService $ciudadService)
     {
-        $this->authorizeResource(Ciudad::class, 'ciudad');
     }
 
     /**
@@ -27,6 +25,9 @@ class CiudadController extends Controller
      */
     public function index(Request $request): Response
     {
+        // Autorización explícita: usa CiudadPolicy@viewAny.
+        $this->authorize('viewAny', Ciudad::class);
+
         $ciudades = $this->ciudadService->listar(
             $request->only('search', 'sort', 'direction')
         );
@@ -42,6 +43,8 @@ class CiudadController extends Controller
      */
     public function create(): Response
     {
+        $this->authorize('create', Ciudad::class);
+
         return Inertia::render('ciudades/create');
     }
 
@@ -50,6 +53,8 @@ class CiudadController extends Controller
      */
     public function store(StoreCiudadRequest $request): RedirectResponse
     {
+        $this->authorize('create', Ciudad::class);
+
         $this->ciudadService->crear($request->validated());
 
         return redirect()
@@ -62,6 +67,8 @@ class CiudadController extends Controller
      */
     public function edit(Ciudad $ciudad): Response
     {
+        $this->authorize('update', $ciudad);
+
         return Inertia::render('ciudades/edit', [
             'ciudad' => $ciudad,
         ]);
@@ -72,6 +79,8 @@ class CiudadController extends Controller
      */
     public function update(UpdateCiudadRequest $request, Ciudad $ciudad): RedirectResponse
     {
+        $this->authorize('update', $ciudad);
+
         $this->ciudadService->actualizar($ciudad, $request->validated());
 
         return redirect()
@@ -84,6 +93,8 @@ class CiudadController extends Controller
      */
     public function destroy(Ciudad $ciudad): RedirectResponse
     {
+        $this->authorize('delete', $ciudad);
+
         $this->ciudadService->eliminar($ciudad);
 
         return redirect()

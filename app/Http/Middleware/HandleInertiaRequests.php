@@ -44,6 +44,17 @@ class HandleInertiaRequests extends Middleware
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
                 'user' => $request->user(),
+                // Permisos del usuario (para mostrar/ocultar botones en el UI).
+                // El Super Admin no tiene roles, pero su bypass se maneja en
+                // el frontend con user.is_super_admin.
+                'permissions' => $request->user()
+                    ? $request->user()->getAllPermissions()->pluck('name')
+                    : [],
+            ],
+            // Mensajes flash de una sola vez (éxito / error).
+            'flash' => [
+                'success' => $request->session()->get('success'),
+                'error' => $request->session()->get('error'),
             ],
         ]);
     }
