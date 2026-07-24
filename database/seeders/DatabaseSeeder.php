@@ -16,8 +16,10 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            PermissionSeeder::class,   // 1º: permisos globales
-            SuperAdminSeeder::class,   // 2º: ISP Principal (dispara IspObserver) + Super Admin
+            PermissionSeeder::class,     // 1º: permisos globales
+            TipoPlanSeeder::class,       // 2º: catálogo global tipos de plan
+            TipoServicioSeeder::class,   // 3º: catálogo global tipos de servicio
+            SuperAdminSeeder::class,     // 4º: ISP Principal (dispara IspObserver) + Super Admin
         ]);
     }
 }
