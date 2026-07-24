@@ -15,6 +15,42 @@ export interface Ciudad {
     updated_at: string;
 }
 
+export interface Barrio {
+    id: number;
+    isp_id: number;
+    ciudad_id: number;
+    nombre: string;
+    prefijo: string;
+    ciudad?: Ciudad;
+    redes_count?: number;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface Red {
+    id: number;
+    isp_id: number;
+    barrio_id: number;
+    numero: number;
+    nombre: string; // Calculado en el backend: numero + prefijo del barrio.
+    barrio?: Barrio;
+    created_at: string;
+    updated_at: string;
+}
+
+// Opción ligera para selectores (id + nombre).
+export interface OpcionSelect {
+    id: number;
+    nombre: string;
+}
+
+// Opción de barrio para el selector de redes (incluye prefijo para preview).
+export interface BarrioOption {
+    id: number;
+    nombre: string;
+    prefijo: string;
+}
+
 // Estructura de una lista paginada de Laravel (paginate()).
 // Genérica: Paginated<Ciudad>, Paginated<Barrio>, etc.
 export interface PaginationLink {
@@ -49,6 +85,8 @@ export interface NavItem {
     url: string;
     icon?: LucideIcon | null;
     isActive?: boolean;
+    // Si tiene sub-items, se renderiza como sección desplegable.
+    items?: NavItem[];
 }
 
 export interface SharedData {

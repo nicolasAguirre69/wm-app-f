@@ -14,9 +14,14 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
-        title: 'Ciudades',
-        url: '/ciudades',
+        title: 'Ubicaciones',
+        url: '#',
         icon: MapPin,
+        items: [
+            { title: 'Ciudades', url: '/ciudades' },
+            { title: 'Barrios', url: '/barrios' },
+            { title: 'Redes', url: '/redes' },
+        ],
     },
 ];
 

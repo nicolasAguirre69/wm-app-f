@@ -20,6 +20,9 @@ class DatabaseSeeder extends Seeder
             TipoPlanSeeder::class,       // 2º: catálogo global tipos de plan
             TipoServicioSeeder::class,   // 3º: catálogo global tipos de servicio
             SuperAdminSeeder::class,     // 4º: ISP Principal (dispara IspObserver) + Super Admin
+            CiudadSeeder::class,         // 5º: ciudades iniciales del ISP Principal
+            BarrioSeeder::class,         // 6º: barrios (el BarrioObserver crea sus 16 redes solo)
+            DevSeeder::class,            // 7º: usuario de pruebas (solo en local)
         ]);
     }
 }

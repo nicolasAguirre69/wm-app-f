@@ -29,6 +29,8 @@ class PermissionSeeder extends Seeder
             'planes.ver', 'planes.crear', 'planes.editar', 'planes.eliminar',
             // Barrios
             'barrios.ver', 'barrios.crear', 'barrios.editar', 'barrios.eliminar',
+            // Redes
+            'redes.ver', 'redes.crear', 'redes.editar', 'redes.eliminar',
             // Ciudades
             'ciudades.ver', 'ciudades.crear', 'ciudades.editar', 'ciudades.eliminar',
             // Estados de cliente
