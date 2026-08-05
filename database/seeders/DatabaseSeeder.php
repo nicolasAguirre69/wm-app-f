@@ -22,7 +22,8 @@ class DatabaseSeeder extends Seeder
             SuperAdminSeeder::class,     // 4º: ISP Principal (dispara IspObserver) + Super Admin
             CiudadSeeder::class,         // 5º: ciudades iniciales del ISP Principal
             BarrioSeeder::class,         // 6º: barrios (el BarrioObserver crea sus 16 redes solo)
-            DevSeeder::class,            // 7º: usuario de pruebas (solo en local)
+            EstadoClienteSeeder::class,  // 7º: estados de cliente iniciales
+            DevSeeder::class,            // 8º: usuario de pruebas (solo en local)
         ]);
     }
 }
