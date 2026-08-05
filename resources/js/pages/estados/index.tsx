@@ -1,15 +1,19 @@
+import InputError from '@/components/input-error';
 import { Pagination } from '@/components/pagination';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { usePermissions } from '@/hooks/use-permissions';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type Paginated, type SharedData, type TipoCatalogo } from '@/types';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, Plus, Trash2 } from 'lucide-react';
-import { FormEvent, useState } from 'react';
+import { FormEvent, FormEventHandler, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Estados de cliente', href: '/estados' }];
+const COLORES = ['#22c55e', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#6b7280'];
 
 interface Filtros {
     search?: string;
@@ -27,6 +31,31 @@ export default function EstadosIndex({ estados, filtros }: Props) {
     const { flash } = usePage<SharedData>().props;
     const [search, setSearch] = useState(filtros.search ?? '');
 
+    const [open, setOpen] = useState(false);
+    const [editando, setEditando] = useState<TipoCatalogo | null>(null);
+    const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({ nombre: '', color: '#22c55e' });
+
+    const abrirCrear = () => {
+        reset();
+        clearErrors();
+        setEditando(null);
+        setOpen(true);
+    };
+
+    const abrirEditar = (estado: TipoCatalogo) => {
+        clearErrors();
+        setData({ nombre: estado.nombre, color: estado.color ?? '#22c55e' });
+        setEditando(estado);
+        setOpen(true);
+    };
+
+    const guardar: FormEventHandler = (e) => {
+        e.preventDefault();
+        const opciones = { onSuccess: () => { setOpen(false); reset(); setEditando(null); } };
+        if (editando) put(`/estados/${editando.id}`, opciones);
+        else post('/estados', opciones);
+    };
+
     const buscar = (e: FormEvent) => {
         e.preventDefault();
         router.get('/estados', { search }, { preserveState: true, replace: true });
@@ -39,11 +68,7 @@ export default function EstadosIndex({ estados, filtros }: Props) {
 
     const iconoOrden = (columna: string) => {
         if (filtros.sort !== columna) return <ArrowUpDown className="ml-1 inline size-3.5 opacity-50" />;
-        return filtros.direction === 'asc' ? (
-            <ArrowUp className="ml-1 inline size-3.5" />
-        ) : (
-            <ArrowDown className="ml-1 inline size-3.5" />
-        );
+        return filtros.direction === 'asc' ? <ArrowUp className="ml-1 inline size-3.5" /> : <ArrowDown className="ml-1 inline size-3.5" />;
     };
 
     const eliminar = (estado: TipoCatalogo) => {
@@ -69,35 +94,15 @@ export default function EstadosIndex({ estados, filtros }: Props) {
                         <p className="text-muted-foreground text-sm">Administra los estados de tu ISP.</p>
                     </div>
                     {can('estados.crear') && (
-                        <Button asChild>
-                            <Link href="/estados/create">
-                                <Plus className="size-4" /> Nuevo estado
-                            </Link>
-                        </Button>
+                        <Button onClick={abrirCrear}><Plus className="size-4" /> Nuevo estado</Button>
                     )}
                 </div>
 
                 <form onSubmit={buscar} className="flex gap-2">
-                    <Input
-                        placeholder="Buscar por nombre..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="max-w-sm"
-                    />
-                    <Button type="submit" variant="secondary">
-                        Buscar
-                    </Button>
+                    <Input placeholder="Buscar por nombre..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
+                    <Button type="submit" variant="secondary">Buscar</Button>
                     {filtros.search && (
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => {
-                                setSearch('');
-                                router.get('/estados', {}, { preserveState: true, replace: true });
-                            }}
-                        >
-                            Limpiar
-                        </Button>
+                        <Button type="button" variant="ghost" onClick={() => { setSearch(''); router.get('/estados', {}, { preserveState: true, replace: true }); }}>Limpiar</Button>
                     )}
                 </form>
 
@@ -106,11 +111,7 @@ export default function EstadosIndex({ estados, filtros }: Props) {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>
-                                    <button
-                                        type="button"
-                                        onClick={() => ordenarPor('nombre')}
-                                        className="flex items-center font-medium"
-                                    >
+                                    <button type="button" onClick={() => ordenarPor('nombre')} className="flex items-center font-medium">
                                         Nombre {iconoOrden('nombre')}
                                     </button>
                                 </TableHead>
@@ -120,27 +121,24 @@ export default function EstadosIndex({ estados, filtros }: Props) {
                         <TableBody>
                             {estados.data.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={2} className="text-muted-foreground py-8 text-center">
-                                        No hay estados registrados.
-                                    </TableCell>
+                                    <TableCell colSpan={2} className="text-muted-foreground py-8 text-center">No hay estados registrados.</TableCell>
                                 </TableRow>
                             ) : (
                                 estados.data.map((estado) => (
                                     <TableRow key={estado.id}>
-                                        <TableCell className="font-medium">{estado.nombre}</TableCell>
+                                        <TableCell className="font-medium">
+                                            <span className="flex items-center gap-2">
+                                                <span className="size-3 rounded-full border" style={{ backgroundColor: estado.color ?? '#e5e7eb' }} />
+                                                {estado.nombre}
+                                            </span>
+                                        </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-1">
                                                 {can('estados.editar') && (
-                                                    <Button asChild variant="ghost" size="icon">
-                                                        <Link href={`/estados/${estado.id}/edit`}>
-                                                            <Pencil className="size-4" />
-                                                        </Link>
-                                                    </Button>
+                                                    <Button variant="ghost" size="icon" onClick={() => abrirEditar(estado)}><Pencil className="size-4" /></Button>
                                                 )}
                                                 {can('estados.eliminar') && (
-                                                    <Button variant="ghost" size="icon" onClick={() => eliminar(estado)}>
-                                                        <Trash2 className="text-destructive size-4" />
-                                                    </Button>
+                                                    <Button variant="ghost" size="icon" onClick={() => eliminar(estado)}><Trash2 className="text-destructive size-4" /></Button>
                                                 )}
                                             </div>
                                         </TableCell>
@@ -158,6 +156,42 @@ export default function EstadosIndex({ estados, filtros }: Props) {
                     <Pagination links={estados.links} />
                 </div>
             </div>
+
+            <Dialog open={open} onOpenChange={setOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{editando ? 'Editar estado' : 'Nuevo estado'}</DialogTitle>
+                        <DialogDescription>Estado de cliente para tu ISP.</DialogDescription>
+                    </DialogHeader>
+
+                    <form onSubmit={guardar} className="space-y-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="nombre">Nombre</Label>
+                            <Input id="nombre" value={data.nombre} onChange={(e) => setData('nombre', e.target.value)} autoFocus placeholder="Ej. Activo" />
+                            <InputError message={errors.nombre} />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="color">Color</Label>
+                            <div className="flex items-center gap-2">
+                                <input id="color" type="color" value={data.color} onChange={(e) => setData('color', e.target.value)} className="h-9 w-14 cursor-pointer rounded border" />
+                                <div className="flex gap-1">
+                                    {COLORES.map((c) => (
+                                        <button key={c} type="button" onClick={() => setData('color', c)} style={{ backgroundColor: c }}
+                                            className={`size-6 rounded-full border-2 ${data.color === c ? 'border-foreground' : 'border-transparent'}`} aria-label={c} />
+                                    ))}
+                                </div>
+                            </div>
+                            <InputError message={errors.color} />
+                        </div>
+
+                        <DialogFooter>
+                            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
+                            <Button type="submit" disabled={processing}>{editando ? 'Guardar cambios' : 'Guardar'}</Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }

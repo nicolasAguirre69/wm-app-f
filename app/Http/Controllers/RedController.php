@@ -29,14 +29,6 @@ class RedController extends Controller
         return Inertia::render('redes/index', [
             'redes' => $redes,
             'filtros' => $request->only('search', 'sort', 'direction'),
-        ]);
-    }
-
-    public function create(): Response
-    {
-        $this->authorize('create', Red::class);
-
-        return Inertia::render('redes/create', [
             'barrios' => $this->barriosDelIsp(),
         ]);
     }
@@ -50,16 +42,6 @@ class RedController extends Controller
         return redirect()
             ->route('redes.index')
             ->with('success', 'Red creada correctamente.');
-    }
-
-    public function edit(Red $red): Response
-    {
-        $this->authorize('update', $red);
-
-        return Inertia::render('redes/edit', [
-            'red' => $red,
-            'barrios' => $this->barriosDelIsp(),
-        ]);
     }
 
     public function update(UpdateRedRequest $request, Red $red): RedirectResponse

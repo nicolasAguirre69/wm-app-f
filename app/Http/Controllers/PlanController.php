@@ -30,14 +30,8 @@ class PlanController extends Controller
         return Inertia::render('planes/index', [
             'planes' => $planes,
             'filtros' => $request->only('search', 'sort', 'direction'),
+            ...$this->catalogos(),
         ]);
-    }
-
-    public function create(): Response
-    {
-        $this->authorize('create', Plan::class);
-
-        return Inertia::render('planes/create', $this->catalogos());
     }
 
     public function store(StorePlanRequest $request): RedirectResponse
@@ -49,16 +43,6 @@ class PlanController extends Controller
         return redirect()
             ->route('planes.index')
             ->with('success', 'Plan creado correctamente.');
-    }
-
-    public function edit(Plan $plan): Response
-    {
-        $this->authorize('update', $plan);
-
-        return Inertia::render('planes/edit', [
-            'plan' => $plan,
-            ...$this->catalogos(),
-        ]);
     }
 
     public function update(UpdatePlanRequest $request, Plan $plan): RedirectResponse

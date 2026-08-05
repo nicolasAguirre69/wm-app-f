@@ -41,6 +41,7 @@ export interface Red {
 export interface TipoCatalogo {
     id: number;
     nombre: string;
+    color?: string; // solo lo usan los estados de cliente
 }
 
 export interface Plan {
@@ -55,6 +56,52 @@ export interface Plan {
     tipo_servicio?: TipoCatalogo;
     created_at: string;
     updated_at: string;
+}
+
+export interface Cliente {
+    id: number;
+    isp_id: number;
+    codigo_cliente: string;
+    tipo_identificacion: string;
+    identificacion: string;
+    tipo_contribuyente: string;
+    primer_nombre: string;
+    segundo_nombre: string | null;
+    primer_apellido: string;
+    segundo_apellido: string;
+    telefono_1: string;
+    telefono_2: string | null;
+    correo: string;
+    ciudad_id: number;
+    barrio_id: number;
+    direccion: string;
+    plan_id: number;
+    estado_id: number;
+    fecha_instalacion: string;
+    dia_corte: number;
+    documento_digitalizado: string | null;
+    facturable: boolean;
+    motivo_no_facturable: string | null;
+    isp?: TipoCatalogo;
+    ciudad?: TipoCatalogo;
+    barrio?: TipoCatalogo;
+    plan?: { id: number; tipo_servicio?: TipoCatalogo };
+    estado?: TipoCatalogo;
+    created_at: string;
+    updated_at: string;
+}
+
+// Opción {value,label} para selectores basados en enums de PHP.
+export interface EnumOption {
+    value: string;
+    label: string;
+}
+
+// Barrio para selector encadenado (incluye ciudad_id para filtrar).
+export interface BarrioSelect {
+    id: number;
+    nombre: string;
+    ciudad_id: number;
 }
 
 // Opción ligera para selectores (id + nombre).

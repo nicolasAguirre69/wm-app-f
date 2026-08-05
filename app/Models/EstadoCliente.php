@@ -19,5 +19,6 @@ class EstadoCliente extends Model
     protected $fillable = [
         'isp_id',
         'nombre',
+        'color',
     ];
 }

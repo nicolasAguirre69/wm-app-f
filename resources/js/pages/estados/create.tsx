@@ -12,9 +12,12 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Nuevo', href: '/estados/create' },
 ];
 
+const COLORES = ['#22c55e', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#6b7280'];
+
 export default function EstadoCreate() {
     const { data, setData, post, processing, errors } = useForm({
         nombre: '',
+        color: '#22c55e',
     });
 
     const submit: FormEventHandler = (e) => {
@@ -43,6 +46,32 @@ export default function EstadoCreate() {
                             placeholder="Ej. Activo"
                         />
                         <InputError message={errors.nombre} />
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="color">Color</Label>
+                        <div className="flex items-center gap-2">
+                            <input
+                                id="color"
+                                type="color"
+                                value={data.color}
+                                onChange={(e) => setData('color', e.target.value)}
+                                className="h-9 w-14 cursor-pointer rounded border"
+                            />
+                            <div className="flex gap-1">
+                                {COLORES.map((c) => (
+                                    <button
+                                        key={c}
+                                        type="button"
+                                        onClick={() => setData('color', c)}
+                                        style={{ backgroundColor: c }}
+                                        className={`size-6 rounded-full border-2 ${data.color === c ? 'border-foreground' : 'border-transparent'}`}
+                                        aria-label={c}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                        <InputError message={errors.color} />
                     </div>
 
                     <div className="flex gap-2">

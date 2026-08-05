@@ -31,13 +31,6 @@ class EstadoClienteController extends Controller
         ]);
     }
 
-    public function create(): Response
-    {
-        $this->authorize('create', EstadoCliente::class);
-
-        return Inertia::render('estados/create');
-    }
-
     public function store(StoreEstadoClienteRequest $request): RedirectResponse
     {
         $this->authorize('create', EstadoCliente::class);
@@ -47,15 +40,6 @@ class EstadoClienteController extends Controller
         return redirect()
             ->route('estados.index')
             ->with('success', 'Estado creado correctamente.');
-    }
-
-    public function edit(EstadoCliente $estado): Response
-    {
-        $this->authorize('update', $estado);
-
-        return Inertia::render('estados/edit', [
-            'estado' => $estado,
-        ]);
     }
 
     public function update(UpdateEstadoClienteRequest $request, EstadoCliente $estado): RedirectResponse

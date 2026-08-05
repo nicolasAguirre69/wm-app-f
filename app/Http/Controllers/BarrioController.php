@@ -29,14 +29,6 @@ class BarrioController extends Controller
         return Inertia::render('barrios/index', [
             'barrios' => $barrios,
             'filtros' => $request->only('search', 'sort', 'direction'),
-        ]);
-    }
-
-    public function create(): Response
-    {
-        $this->authorize('create', Barrio::class);
-
-        return Inertia::render('barrios/create', [
             'ciudades' => $this->ciudadesDelIsp(),
         ]);
     }
@@ -50,16 +42,6 @@ class BarrioController extends Controller
         return redirect()
             ->route('barrios.index')
             ->with('success', 'Barrio creado correctamente.');
-    }
-
-    public function edit(Barrio $barrio): Response
-    {
-        $this->authorize('update', $barrio);
-
-        return Inertia::render('barrios/edit', [
-            'barrio' => $barrio,
-            'ciudades' => $this->ciudadesDelIsp(),
-        ]);
     }
 
     public function update(UpdateBarrioRequest $request, Barrio $barrio): RedirectResponse
