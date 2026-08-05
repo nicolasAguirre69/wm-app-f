@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BarrioController;
 use App\Http\Controllers\CiudadController;
+use App\Http\Controllers\PlanController;
 use App\Http\Controllers\RedController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -28,6 +29,11 @@ Route::middleware(['auth', 'isp.active'])->group(function () {
     // CRUD de Redes.
     Route::resource('redes', RedController::class)
         ->parameters(['redes' => 'red'])
+        ->except('show');
+
+    // CRUD de Planes.
+    Route::resource('planes', PlanController::class)
+        ->parameters(['planes' => 'plan'])
         ->except('show');
 });
 

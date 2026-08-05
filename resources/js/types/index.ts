@@ -38,6 +38,25 @@ export interface Red {
     updated_at: string;
 }
 
+export interface TipoCatalogo {
+    id: number;
+    nombre: string;
+}
+
+export interface Plan {
+    id: number;
+    isp_id: number;
+    tipo_plan_id: number;
+    tipo_servicio_id: number;
+    cantidad: number | null;
+    valor: string; // Laravel serializa decimal como string (ej. "50000.00").
+    activo: boolean;
+    tipo_plan?: TipoCatalogo;
+    tipo_servicio?: TipoCatalogo;
+    created_at: string;
+    updated_at: string;
+}
+
 // Opción ligera para selectores (id + nombre).
 export interface OpcionSelect {
     id: number;
