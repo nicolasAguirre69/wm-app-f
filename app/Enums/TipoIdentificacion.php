@@ -12,6 +12,8 @@ enum TipoIdentificacion: string
     case NIT = 'NIT';
     case PA = 'PA';
     case TI = 'TI';
+    case PPT = 'PPT';
+    case PEP = 'PEP';
 
     public function label(): string
     {
@@ -21,6 +23,8 @@ enum TipoIdentificacion: string
             self::NIT => 'NIT',
             self::PA => 'Pasaporte',
             self::TI => 'Tarjeta de identidad',
+            self::PPT => 'Permiso por Protección Temporal',
+            self::PEP => 'Permiso Especial de Permanencia',
         };
     }
 

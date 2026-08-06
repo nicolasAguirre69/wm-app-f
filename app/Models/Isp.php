@@ -57,4 +57,12 @@ class Isp extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    /**
+     * Relación: los clientes de este ISP.
+     */
+    public function clientes(): HasMany
+    {
+        return $this->hasMany(Cliente::class);
+    }
 }
