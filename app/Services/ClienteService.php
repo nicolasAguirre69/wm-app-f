@@ -22,7 +22,7 @@ class ClienteService
      */
     public function listar(array $filtros): LengthAwarePaginator
     {
-        return Cliente::query()
+        $paginador = Cliente::query()
             // Cargamos las relaciones que mostramos en la tabla (evita N+1).
             // 'isp' se usa en la vista del Super Admin.
             ->with(['isp', 'ciudad', 'barrio', 'plan.tipoServicio', 'estado'])
@@ -51,6 +51,14 @@ class ClienteService
             ->orderBy($filtros['sort'] ?? 'created_at', $filtros['direction'] ?? 'desc')
             ->paginate(10)
             ->withQueryString();
+
+        // BLINDAJE: si quien consulta NO es Super Admin, ocultamos el estado de
+        // facturación por completo — ni siquiera viaja en el JSON al navegador.
+        if (! Auth::user()?->is_super_admin) {
+            $paginador->getCollection()->makeHidden(['facturable', 'motivo_no_facturable']);
+        }
+
+        return $paginador;
     }
 
     /**

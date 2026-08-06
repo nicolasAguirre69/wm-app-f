@@ -3,6 +3,7 @@
 use App\Http\Controllers\BarrioController;
 use App\Http\Controllers\CiudadController;
 use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EstadoClienteController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\RedController;
@@ -14,9 +15,7 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth', 'isp.active'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Los formularios de crear/editar son modales en el listado, así que no
     // necesitamos rutas create/edit (páginas separadas). Solo index + acciones.

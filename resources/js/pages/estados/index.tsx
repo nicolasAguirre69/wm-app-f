@@ -13,7 +13,16 @@ import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, Plus, Trash2 } from 'lucide-re
 import { FormEvent, FormEventHandler, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Estados de cliente', href: '/estados' }];
-const COLORES = ['#22c55e', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#6b7280'];
+
+// Paleta UNIVERSAL (debe coincidir con EstadoCliente::COLORES del backend).
+const PALETA = [
+    { color: '#22c55e', nombre: 'Verde' },
+    { color: '#f59e0b', nombre: 'Ámbar' },
+    { color: '#ef4444', nombre: 'Rojo' },
+    { color: '#3b82f6', nombre: 'Azul' },
+    { color: '#8b5cf6', nombre: 'Morado' },
+    { color: '#6b7280', nombre: 'Gris' },
+];
 
 interface Filtros {
     search?: string;
@@ -172,15 +181,14 @@ export default function EstadosIndex({ estados, filtros }: Props) {
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="color">Color</Label>
-                            <div className="flex items-center gap-2">
-                                <input id="color" type="color" value={data.color} onChange={(e) => setData('color', e.target.value)} className="h-9 w-14 cursor-pointer rounded border" />
-                                <div className="flex gap-1">
-                                    {COLORES.map((c) => (
-                                        <button key={c} type="button" onClick={() => setData('color', c)} style={{ backgroundColor: c }}
-                                            className={`size-6 rounded-full border-2 ${data.color === c ? 'border-foreground' : 'border-transparent'}`} aria-label={c} />
-                                    ))}
-                                </div>
+                            <Label>Color</Label>
+                            <div className="flex gap-2">
+                                {PALETA.map((c) => (
+                                    <button key={c.color} type="button" onClick={() => setData('color', c.color)} style={{ backgroundColor: c.color }}
+                                        title={c.nombre}
+                                        className={`size-8 rounded-full border-2 transition ${data.color === c.color ? 'border-foreground scale-110' : 'border-transparent'}`}
+                                        aria-label={c.nombre} />
+                                ))}
                             </div>
                             <InputError message={errors.color} />
                         </div>

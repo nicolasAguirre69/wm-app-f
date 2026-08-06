@@ -187,14 +187,17 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
                         </Select>
                     )}
 
-                    <Select value={filtros.facturable ?? TODOS} onValueChange={(v) => filtrar('facturable', v)}>
-                        <SelectTrigger className="w-44"><SelectValue placeholder="Facturable" /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value={TODOS}>Todos</SelectItem>
-                            <SelectItem value="1">Facturables</SelectItem>
-                            <SelectItem value="0">No facturables</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    {/* Filtro de facturable: EXCLUSIVO del Super Admin. */}
+                    {esSuperAdmin && (
+                        <Select value={filtros.facturable ?? TODOS} onValueChange={(v) => filtrar('facturable', v)}>
+                            <SelectTrigger className="w-44"><SelectValue placeholder="Facturable" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value={TODOS}>Todos</SelectItem>
+                                <SelectItem value="1">Facturables</SelectItem>
+                                <SelectItem value="0">No facturables</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    )}
 
                     {(filtros.search || filtros.isp_id || filtros.facturable) && (
                         <Button type="button" variant="ghost" onClick={() => { setSearch(''); router.get('/clientes', {}, { preserveState: true, replace: true }); }}>Limpiar filtros</Button>
@@ -215,14 +218,14 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
                                 <TableHead>Identificación</TableHead>
                                 <TableHead>Servicio</TableHead>
                                 <TableHead>Estado</TableHead>
-                                <TableHead>Facturable</TableHead>
+                                {esSuperAdmin && <TableHead>Facturable</TableHead>}
                                 <TableHead className="w-32 text-right">Acciones</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {clientes.data.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={esSuperAdmin ? 8 : 7} className="text-muted-foreground py-8 text-center">No hay clientes registrados.</TableCell>
+                                    <TableCell colSpan={esSuperAdmin ? 8 : 6} className="text-muted-foreground py-8 text-center">No hay clientes registrados.</TableCell>
                                 </TableRow>
                             ) : (
                                 clientes.data.map((cliente) => (
@@ -238,17 +241,14 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
                                                 {cliente.estado?.nombre ?? '—'}
                                             </span>
                                         </TableCell>
-                                        <TableCell>
-                                            {esSuperAdmin ? (
+                                        {esSuperAdmin && (
+                                            <TableCell>
                                                 <button type="button" onClick={() => toggleFacturable(cliente)}
                                                     title={`${cliente.facturable ? 'Facturable' : 'No facturable'} — clic para cambiar`}
                                                     className="inline-block size-3.5 rounded-full ring-offset-2 transition hover:ring-2 hover:ring-foreground/40"
                                                     style={{ backgroundColor: cliente.facturable ? '#22c55e' : '#ef4444' }} />
-                                            ) : (
-                                                <span title={cliente.facturable ? 'Facturable' : 'No facturable'} className="inline-block size-3.5 rounded-full"
-                                                    style={{ backgroundColor: cliente.facturable ? '#22c55e' : '#ef4444' }} />
-                                            )}
-                                        </TableCell>
+                                            </TableCell>
+                                        )}
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-1">
                                                 {can('clientes.editar') && (

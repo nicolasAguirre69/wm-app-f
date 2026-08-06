@@ -6,6 +6,7 @@ use App\Traits\BelongsToIsp;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -50,5 +51,13 @@ class Plan extends Model
     public function tipoServicio(): BelongsTo
     {
         return $this->belongsTo(TipoServicio::class);
+    }
+
+    /**
+     * Clientes que tienen contratado este plan.
+     */
+    public function clientes(): HasMany
+    {
+        return $this->hasMany(Cliente::class);
     }
 }

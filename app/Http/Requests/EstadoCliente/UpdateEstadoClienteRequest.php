@@ -27,7 +27,7 @@ class UpdateEstadoClienteRequest extends FormRequest
                     ->whereNull('deleted_at')
                     ->ignore($this->route('estado')),
             ],
-            'color' => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'color' => ['required', Rule::in(\App\Models\EstadoCliente::COLORES)],
         ];
     }
 
@@ -40,7 +40,7 @@ class UpdateEstadoClienteRequest extends FormRequest
             'nombre.required' => 'El nombre del estado es obligatorio.',
             'nombre.unique' => 'Ya existe un estado con ese nombre en tu ISP.',
             'color.required' => 'El color es obligatorio.',
-            'color.regex' => 'El color debe ser un valor hexadecimal (ej. #22c55e).',
+            'color.in' => 'El color debe ser uno de la paleta estándar.',
         ];
     }
 }
