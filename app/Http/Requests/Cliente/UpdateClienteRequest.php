@@ -19,7 +19,10 @@ class UpdateClienteRequest extends FormRequest
      */
     public function rules(): array
     {
-        $ispId = $this->user()->isp_id;
+        // Usamos el ISP DEL CLIENTE (no el del usuario): así el Super Admin
+        // puede editar clientes de cualquier ISP, validando contra los
+        // catálogos de la ISP a la que pertenece ese cliente.
+        $ispId = $this->route('cliente')->isp_id;
 
         return [
             'codigo_cliente' => [
@@ -36,15 +39,16 @@ class UpdateClienteRequest extends FormRequest
             'primer_nombre' => ['required', 'string', 'max:255'],
             'segundo_nombre' => ['nullable', 'string', 'max:255'],
             'primer_apellido' => ['required', 'string', 'max:255'],
-            'segundo_apellido' => ['required', 'string', 'max:255'],
+            'segundo_apellido' => ['nullable', 'string', 'max:255'],
 
             'telefono_1' => ['required', 'string', 'max:255'],
             'telefono_2' => ['nullable', 'string', 'max:255'],
-            'correo' => ['required', 'email', 'max:255'],
+            'correo' => ['nullable', 'email', 'max:255'],
 
+            // Ciudad: catálogo GLOBAL, solo debe existir.
             'ciudad_id' => [
                 'required',
-                Rule::exists('ciudades', 'id')->where('isp_id', $ispId)->whereNull('deleted_at'),
+                Rule::exists('ciudades', 'id')->whereNull('deleted_at'),
             ],
             'barrio_id' => [
                 'required',
@@ -64,8 +68,8 @@ class UpdateClienteRequest extends FormRequest
                 Rule::exists('estados_cliente', 'id')->where('isp_id', $ispId)->whereNull('deleted_at'),
             ],
 
-            'fecha_instalacion' => ['required', 'date'],
-            'dia_corte' => ['required', 'integer', 'between:1,31'],
+            'fecha_instalacion' => ['nullable', 'date'],
+            'dia_corte' => ['nullable', 'integer', 'between:1,31'],
 
             // Opcional al editar: si no se sube uno nuevo, se conserva el actual.
             'documento_digitalizado' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],

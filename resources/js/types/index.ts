@@ -68,17 +68,17 @@ export interface Cliente {
     primer_nombre: string;
     segundo_nombre: string | null;
     primer_apellido: string;
-    segundo_apellido: string;
+    segundo_apellido: string | null;
     telefono_1: string;
     telefono_2: string | null;
-    correo: string;
+    correo: string | null;
     ciudad_id: number;
     barrio_id: number;
     direccion: string;
     plan_id: number;
     estado_id: number;
-    fecha_instalacion: string;
-    dia_corte: number;
+    fecha_instalacion: string | null;
+    dia_corte: number | null;
     documento_digitalizado: string | null;
     facturable: boolean;
     motivo_no_facturable: string | null;
@@ -97,11 +97,19 @@ export interface EnumOption {
     label: string;
 }
 
-// Barrio para selector encadenado (incluye ciudad_id para filtrar).
+// Barrio para selector encadenado (incluye ciudad_id e isp_id para filtrar).
 export interface BarrioSelect {
     id: number;
     nombre: string;
     ciudad_id: number;
+    isp_id: number;
+}
+
+// Opción de catálogo por ISP (plan, estado) para acotar por ISP del cliente.
+export interface OpcionIsp {
+    id: number;
+    nombre: string;
+    isp_id: number;
 }
 
 // Opción ligera para selectores (id + nombre).

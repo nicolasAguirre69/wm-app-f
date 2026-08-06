@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { usePermissions } from '@/hooks/use-permissions';
 import { clienteSchema } from '@/lib/validations/cliente';
 import AppLayout from '@/layouts/app-layout';
-import { type BarrioSelect, type BreadcrumbItem, type Cliente, type EnumOption, type OpcionSelect, type Paginated, type SharedData } from '@/types';
+import { type BarrioSelect, type BreadcrumbItem, type Cliente, type EnumOption, type OpcionIsp, type OpcionSelect, type Paginated, type SharedData } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, Plus, Trash2 } from 'lucide-react';
 import { FormEvent, FormEventHandler, useState } from 'react';
@@ -30,8 +30,8 @@ interface Props {
     isps: OpcionSelect[] | null;
     ciudades: OpcionSelect[];
     barrios: BarrioSelect[];
-    planes: OpcionSelect[];
-    estados: OpcionSelect[];
+    planes: OpcionIsp[];
+    estados: OpcionIsp[];
     tiposIdentificacion: EnumOption[];
     tiposContribuyente: EnumOption[];
 }
@@ -80,17 +80,18 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
             primer_nombre: c.primer_nombre,
             segundo_nombre: c.segundo_nombre ?? '',
             primer_apellido: c.primer_apellido,
-            segundo_apellido: c.segundo_apellido,
+            segundo_apellido: c.segundo_apellido ?? '',
             telefono_1: c.telefono_1,
             telefono_2: c.telefono_2 ?? '',
-            correo: c.correo,
+            correo: c.correo ?? '',
             ciudad_id: String(c.ciudad_id),
             barrio_id: String(c.barrio_id),
             direccion: c.direccion,
             plan_id: String(c.plan_id),
             estado_id: String(c.estado_id),
-            fecha_instalacion: c.fecha_instalacion.slice(0, 10),
-            dia_corte: String(c.dia_corte),
+            // Campos que pueden venir nulos (clientes importados).
+            fecha_instalacion: c.fecha_instalacion ? c.fecha_instalacion.slice(0, 10) : '',
+            dia_corte: c.dia_corte != null ? String(c.dia_corte) : '',
             documento_digitalizado: null,
         });
         setDocActual(c.documento_digitalizado);
@@ -293,6 +294,7 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
                             tiposIdentificacion={tiposIdentificacion}
                             tiposContribuyente={tiposContribuyente}
                             documentoActual={docActual}
+                            ispId={editando ? editando.isp_id : esSuperAdmin ? null : (auth.user?.isp_id ?? null)}
                         />
                         <DialogFooter>
                             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>

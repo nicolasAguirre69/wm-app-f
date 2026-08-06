@@ -112,17 +112,20 @@ class ClienteController extends Controller
     private function catalogos(): array
     {
         return [
+            // Ciudades es catálogo global.
             'ciudades' => Ciudad::orderBy('nombre')->get(['id', 'nombre']),
-            // Barrios con su ciudad_id: el frontend filtra según la ciudad elegida.
-            'barrios' => Barrio::orderBy('nombre')->get(['id', 'nombre', 'ciudad_id']),
+            // Barrios/planes/estados llevan isp_id: el frontend los acota a la
+            // ISP del cliente que se edita (relevante para el Super Admin).
+            'barrios' => Barrio::orderBy('nombre')->get(['id', 'nombre', 'ciudad_id', 'isp_id']),
             'planes' => Plan::with(['tipoPlan', 'tipoServicio'])->get()->map(fn (Plan $p) => [
                 'id' => $p->id,
+                'isp_id' => $p->isp_id,
                 'nombre' => trim(
                     ($p->tipoPlan->nombre ?? '').' - '.($p->tipoServicio->nombre ?? '')
                     .($p->cantidad ? ' - '.$p->cantidad.'Mbps' : '')
                 ),
             ]),
-            'estados' => EstadoCliente::orderBy('nombre')->get(['id', 'nombre']),
+            'estados' => EstadoCliente::orderBy('nombre')->get(['id', 'nombre', 'isp_id']),
             'tiposIdentificacion' => TipoIdentificacion::opciones(),
             'tiposContribuyente' => TipoContribuyente::opciones(),
         ];

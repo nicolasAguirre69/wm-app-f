@@ -18,11 +18,10 @@ class UpdateBarrioRequest extends FormRequest
     public function rules(): array
     {
         return [
+            // Ciudad es catálogo GLOBAL: solo debe existir.
             'ciudad_id' => [
                 'required',
-                Rule::exists('ciudades', 'id')
-                    ->where('isp_id', $this->user()->isp_id)
-                    ->whereNull('deleted_at'),
+                Rule::exists('ciudades', 'id')->whereNull('deleted_at'),
             ],
             'nombre' => [
                 'required',

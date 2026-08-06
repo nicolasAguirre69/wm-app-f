@@ -39,9 +39,8 @@ class BarrioSeeder extends Seeder
         ];
 
         foreach ($barriosPorCiudad as $nombreCiudad => $barrios) {
-            $ciudad = Ciudad::where('isp_id', $ispPrincipal->id)
-                ->where('nombre', $nombreCiudad)
-                ->first();
+            // Ciudad es global ahora (sin isp_id).
+            $ciudad = Ciudad::where('nombre', $nombreCiudad)->first();
 
             if (! $ciudad) {
                 continue; // Si la ciudad no existe, saltamos sus barrios.

@@ -20,11 +20,10 @@ class StoreBarrioRequest extends FormRequest
         return [
             // La ciudad debe EXISTIR y pertenecer al ISP del usuario.
             // Así nadie puede asignar un barrio a la ciudad de otro ISP.
+            // Ciudad es catálogo GLOBAL: solo debe existir.
             'ciudad_id' => [
                 'required',
-                Rule::exists('ciudades', 'id')
-                    ->where('isp_id', $this->user()->isp_id)
-                    ->whereNull('deleted_at'),
+                Rule::exists('ciudades', 'id')->whereNull('deleted_at'),
             ],
             'nombre' => [
                 'required',

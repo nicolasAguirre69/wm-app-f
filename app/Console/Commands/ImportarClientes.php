@@ -81,7 +81,7 @@ class ImportarClientes extends Command
                 }
 
                 $isp = $this->obtenerIsp($ispNombre);
-                $ciudad = $this->obtenerCiudad($isp->id);
+                $ciudad = $this->obtenerCiudad();
                 $estado = $this->obtenerEstado($isp->id);
                 $plan = $this->obtenerPlan($isp->id, $tipoPlan->id, $tipoServicio->id);
                 $barrio = $this->obtenerBarrio($isp->id, $ciudad->id, trim($barrioNom) ?: 'Sin asignar');
@@ -158,11 +158,10 @@ class ImportarClientes extends Command
         return $this->ispCache[$nombre] = $isp;
     }
 
-    private function obtenerCiudad(int $ispId): Ciudad
+    private function obtenerCiudad(): Ciudad
     {
-        return $this->ciudadCache[$ispId] ??= Ciudad::firstOrCreate([
-            'isp_id' => $ispId, 'nombre' => 'Bogotá',
-        ]);
+        // Ciudad es catálogo global.
+        return $this->ciudadCache['Bogotá'] ??= Ciudad::firstOrCreate(['nombre' => 'Bogotá']);
     }
 
     private function obtenerEstado(int $ispId): EstadoCliente

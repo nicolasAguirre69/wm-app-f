@@ -2,58 +2,34 @@
 
 namespace App\Policies;
 
-use App\Models\Ciudad;
 use App\Models\User;
 
 /**
- * Policy de Ciudad: autorización por permiso + pertenencia al ISP.
+ * Ciudades es un catálogo GLOBAL: solo lo administra el Super Admin.
  *
- * Nota: el Super Admin NO pasa por aquí; el Gate::before (AppServiceProvider)
- * lo autoriza antes de evaluar cualquier método de esta Policy.
+ * El Super Admin pasa por Gate::before (autoriza todo antes de llegar aquí).
+ * Para cualquier otro usuario, estos métodos niegan: los ISP seleccionan
+ * ciudades en sus formularios, pero no las crean ni editan.
  */
 class CiudadPolicy
 {
-    /**
-     * ¿Puede ver el listado de ciudades?
-     */
     public function viewAny(User $user): bool
     {
-        return $user->can('ciudades.ver');
+        return false;
     }
 
-    /**
-     * ¿Puede ver una ciudad concreta?
-     * Permiso + que la ciudad sea de su ISP.
-     */
-    public function view(User $user, Ciudad $ciudad): bool
-    {
-        return $user->can('ciudades.ver')
-            && $ciudad->isp_id === $user->isp_id;
-    }
-
-    /**
-     * ¿Puede crear ciudades?
-     */
     public function create(User $user): bool
     {
-        return $user->can('ciudades.crear');
+        return false;
     }
 
-    /**
-     * ¿Puede editar esta ciudad?
-     */
-    public function update(User $user, Ciudad $ciudad): bool
+    public function update(User $user): bool
     {
-        return $user->can('ciudades.editar')
-            && $ciudad->isp_id === $user->isp_id;
+        return false;
     }
 
-    /**
-     * ¿Puede eliminar esta ciudad?
-     */
-    public function delete(User $user, Ciudad $ciudad): bool
+    public function delete(User $user): bool
     {
-        return $user->can('ciudades.eliminar')
-            && $ciudad->isp_id === $user->isp_id;
+        return false;
     }
 }

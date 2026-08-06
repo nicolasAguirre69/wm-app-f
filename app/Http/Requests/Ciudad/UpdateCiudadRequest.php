@@ -27,7 +27,6 @@ class UpdateCiudadRequest extends FormRequest
                 // Único dentro del ISP, pero IGNORANDO la ciudad que editamos
                 // (si no, no podrías guardar sin cambiar el nombre).
                 Rule::unique('ciudades', 'nombre')
-                    ->where('isp_id', $this->user()->isp_id)
                     ->whereNull('deleted_at')
                     ->ignore($this->route('ciudad')),
             ],
@@ -41,7 +40,7 @@ class UpdateCiudadRequest extends FormRequest
     {
         return [
             'nombre.required' => 'El nombre de la ciudad es obligatorio.',
-            'nombre.unique' => 'Ya existe una ciudad con ese nombre en tu ISP.',
+            'nombre.unique' => 'Ya existe una ciudad con ese nombre.',
         ];
     }
 }

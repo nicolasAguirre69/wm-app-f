@@ -36,16 +36,16 @@ class StoreClienteRequest extends FormRequest
             'primer_nombre' => ['required', 'string', 'max:255'],
             'segundo_nombre' => ['nullable', 'string', 'max:255'],
             'primer_apellido' => ['required', 'string', 'max:255'],
-            'segundo_apellido' => ['required', 'string', 'max:255'],
+            'segundo_apellido' => ['nullable', 'string', 'max:255'],
 
             'telefono_1' => ['required', 'string', 'max:255'],
             'telefono_2' => ['nullable', 'string', 'max:255'],
-            'correo' => ['required', 'email', 'max:255'],
+            'correo' => ['nullable', 'email', 'max:255'],
 
-            // Ciudad: debe ser del ISP del usuario.
+            // Ciudad: catálogo GLOBAL, solo debe existir.
             'ciudad_id' => [
                 'required',
-                Rule::exists('ciudades', 'id')->where('isp_id', $ispId)->whereNull('deleted_at'),
+                Rule::exists('ciudades', 'id')->whereNull('deleted_at'),
             ],
             // Barrio: del ISP Y de la ciudad seleccionada (validación cruzada).
             'barrio_id' => [
@@ -66,8 +66,8 @@ class StoreClienteRequest extends FormRequest
                 Rule::exists('estados_cliente', 'id')->where('isp_id', $ispId)->whereNull('deleted_at'),
             ],
 
-            'fecha_instalacion' => ['required', 'date'],
-            'dia_corte' => ['required', 'integer', 'between:1,31'],
+            'fecha_instalacion' => ['nullable', 'date'],
+            'dia_corte' => ['nullable', 'integer', 'between:1,31'],
 
             // Documento: archivo PDF o imagen, máx 5 MB.
             'documento_digitalizado' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],

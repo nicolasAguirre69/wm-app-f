@@ -2,7 +2,7 @@ import InputError from '@/components/input-error';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { type BarrioSelect, type EnumOption, type OpcionSelect } from '@/types';
+import { type BarrioSelect, type EnumOption, type OpcionIsp, type OpcionSelect } from '@/types';
 import { useMemo } from 'react';
 
 export interface ClienteFormValues {
@@ -33,11 +33,13 @@ interface Props {
     errors: Partial<Record<string, string>>;
     ciudades: OpcionSelect[];
     barrios: BarrioSelect[];
-    planes: OpcionSelect[];
-    estados: OpcionSelect[];
+    planes: OpcionIsp[];
+    estados: OpcionIsp[];
     tiposIdentificacion: EnumOption[];
     tiposContribuyente: EnumOption[];
     documentoActual?: string | null; // ruta del documento existente (al editar)
+    // Si viene, acota barrios/planes/estados a esa ISP (ISP del cliente).
+    ispId?: number | null;
 }
 
 export function ClienteFormFields({
@@ -51,11 +53,25 @@ export function ClienteFormFields({
     tiposIdentificacion,
     tiposContribuyente,
     documentoActual,
+    ispId = null,
 }: Props) {
-    // Barrios de la ciudad seleccionada (select encadenado).
+    // Si hay ispId, acotamos a esa ISP (evita ver catálogos de otras ISPs).
+    const planesFiltrados = useMemo(
+        () => (ispId ? planes.filter((p) => p.isp_id === ispId) : planes),
+        [planes, ispId],
+    );
+    const estadosFiltrados = useMemo(
+        () => (ispId ? estados.filter((e) => e.isp_id === ispId) : estados),
+        [estados, ispId],
+    );
+
+    // Barrios de la ciudad seleccionada (select encadenado) y de la ISP.
     const barriosFiltrados = useMemo(
-        () => barrios.filter((b) => String(b.ciudad_id) === data.ciudad_id),
-        [barrios, data.ciudad_id],
+        () =>
+            barrios.filter(
+                (b) => String(b.ciudad_id) === data.ciudad_id && (! ispId || b.isp_id === ispId),
+            ),
+        [barrios, data.ciudad_id, ispId],
     );
 
     // Al cambiar de ciudad, limpiamos el barrio elegido.
@@ -203,7 +219,7 @@ export function ClienteFormFields({
                         <Select value={data.plan_id} onValueChange={(v) => setData('plan_id', v)}>
                             <SelectTrigger id="plan_id"><SelectValue placeholder="Selecciona un plan" /></SelectTrigger>
                             <SelectContent>
-                                {planes.map((p) => (
+                                {planesFiltrados.map((p) => (
                                     <SelectItem key={p.id} value={String(p.id)}>{p.nombre}</SelectItem>
                                 ))}
                             </SelectContent>
@@ -215,7 +231,7 @@ export function ClienteFormFields({
                         <Select value={data.estado_id} onValueChange={(v) => setData('estado_id', v)}>
                             <SelectTrigger id="estado_id"><SelectValue placeholder="Selecciona un estado" /></SelectTrigger>
                             <SelectContent>
-                                {estados.map((e) => (
+                                {estadosFiltrados.map((e) => (
                                     <SelectItem key={e.id} value={String(e.id)}>{e.nombre}</SelectItem>
                                 ))}
                             </SelectContent>

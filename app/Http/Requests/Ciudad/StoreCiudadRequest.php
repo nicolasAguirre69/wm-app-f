@@ -28,9 +28,8 @@ class StoreCiudadRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                // Único DENTRO del ISP del usuario (no globalmente).
+                // Único a nivel GLOBAL (ciudades es catálogo compartido).
                 Rule::unique('ciudades', 'nombre')
-                    ->where('isp_id', $this->user()->isp_id)
                     ->whereNull('deleted_at'),
             ],
         ];
@@ -45,7 +44,7 @@ class StoreCiudadRequest extends FormRequest
     {
         return [
             'nombre.required' => 'El nombre de la ciudad es obligatorio.',
-            'nombre.unique' => 'Ya existe una ciudad con ese nombre en tu ISP.',
+            'nombre.unique' => 'Ya existe una ciudad con ese nombre.',
         ];
     }
 }

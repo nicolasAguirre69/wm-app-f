@@ -13,17 +13,9 @@ class CiudadSeeder extends Seeder
 {
     public function run(): void
     {
-        $ispPrincipal = Isp::where('tipo', 'principal')->first();
-
-        if (! $ispPrincipal) {
-            return;
-        }
-
+        // Ciudades es un catálogo GLOBAL (sin isp_id).
         foreach (['Bogotá', 'Soacha'] as $nombre) {
-            Ciudad::firstOrCreate([
-                'isp_id' => $ispPrincipal->id,
-                'nombre' => $nombre,
-            ]);
+            Ciudad::firstOrCreate(['nombre' => $nombre]);
         }
     }
 }
