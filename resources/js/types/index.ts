@@ -3,6 +3,7 @@ import { LucideIcon } from 'lucide-react';
 export interface Auth {
     user: User;
     permissions: string[];
+    isp: { id: number; nombre: string } | null;
 }
 
 // --- Tipos de dominio ---
