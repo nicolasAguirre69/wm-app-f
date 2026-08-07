@@ -112,6 +112,15 @@ export interface OpcionIsp {
     isp_id: number;
 }
 
+export interface Comentario {
+    id: number;
+    tipo: 'seguimiento' | 'facturacion';
+    contenido: string;
+    autor: string | null;
+    fecha: string;
+    puede_borrar: boolean;
+}
+
 // Opción ligera para selectores (id + nombre).
 export interface OpcionSelect {
     id: number;

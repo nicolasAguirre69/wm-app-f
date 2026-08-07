@@ -9,6 +9,7 @@ use App\Http\Requests\Cliente\UpdateClienteRequest;
 use App\Models\Barrio;
 use App\Models\Ciudad;
 use App\Models\Cliente;
+use App\Models\Comentario;
 use App\Models\EstadoCliente;
 use App\Models\Plan;
 use App\Services\ClienteService;
@@ -38,8 +39,48 @@ class ClienteController extends Controller
             'isps' => $request->user()->is_super_admin
                 ? \App\Models\Isp::orderBy('nombre')->get(['id', 'nombre'])
                 : null,
+            // Comentarios del cliente solicitado (carga bajo demanda).
+            'comentarios' => $this->comentariosDe($request),
+            'puedeFacturacion' => $request->user()->puedeVerFacturacion(),
             ...$this->catalogos(),
         ]);
+    }
+
+    /**
+     * Comentarios de un cliente (cuando llega ?comentarios_de=ID).
+     * Filtra los de facturación si el usuario no tiene acceso.
+     *
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     */
+    private function comentariosDe(Request $request)
+    {
+        $id = $request->integer('comentarios_de');
+
+        if (! $id) {
+            return collect();
+        }
+
+        $cliente = Cliente::find($id); // scoped por ISP (super admin ve todos)
+
+        if (! $cliente || $request->user()->cannot('view', $cliente)) {
+            return collect();
+        }
+
+        $puedeFacturacion = $request->user()->puedeVerFacturacion();
+
+        return $cliente->comentarios()
+            ->with('autor:id,name')
+            ->when(! $puedeFacturacion, fn ($q) => $q->where('tipo', 'seguimiento'))
+            ->latest()
+            ->get()
+            ->map(fn (Comentario $c) => [
+                'id' => $c->id,
+                'tipo' => $c->tipo->value,
+                'contenido' => $c->contenido,
+                'autor' => $c->autor?->name,
+                'fecha' => $c->created_at->format('Y-m-d H:i'),
+                'puede_borrar' => $request->user()->is_super_admin || $c->user_id === $request->user()->id,
+            ]);
     }
 
     public function store(StoreClienteRequest $request): RedirectResponse

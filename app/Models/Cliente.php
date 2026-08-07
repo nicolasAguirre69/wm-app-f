@@ -82,4 +82,12 @@ class Cliente extends Model
     {
         return $this->belongsTo(User::class, 'usuario_creador_id');
     }
+
+    /**
+     * Comentarios/observaciones del cliente.
+     */
+    public function comentarios(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Comentario::class);
+    }
 }

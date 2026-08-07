@@ -8,9 +8,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { usePermissions } from '@/hooks/use-permissions';
 import { clienteSchema } from '@/lib/validations/cliente';
 import AppLayout from '@/layouts/app-layout';
-import { type BarrioSelect, type BreadcrumbItem, type Cliente, type EnumOption, type OpcionIsp, type OpcionSelect, type Paginated, type SharedData } from '@/types';
+import { type BarrioSelect, type BreadcrumbItem, type Cliente, type Comentario, type EnumOption, type OpcionIsp, type OpcionSelect, type Paginated, type SharedData } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, MessageSquare, Pencil, Plus, Trash2 } from 'lucide-react';
 import { FormEvent, FormEventHandler, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Clientes', href: '/clientes' }];
@@ -34,6 +34,8 @@ interface Props {
     estados: OpcionIsp[];
     tiposIdentificacion: EnumOption[];
     tiposContribuyente: EnumOption[];
+    comentarios: Comentario[];
+    puedeFacturacion: boolean;
 }
 
 const vacio = (): ClienteFormValues & { _method: string } => ({
@@ -46,11 +48,66 @@ const vacio = (): ClienteFormValues & { _method: string } => ({
     documento_digitalizado: null,
 });
 
-export default function ClientesIndex({ clientes, filtros, isps, ciudades, barrios, planes, estados, tiposIdentificacion, tiposContribuyente }: Props) {
+export default function ClientesIndex({ clientes, filtros, isps, ciudades, barrios, planes, estados, tiposIdentificacion, tiposContribuyente, comentarios, puedeFacturacion }: Props) {
     const { can } = usePermissions();
     const { auth, flash } = usePage<SharedData>().props;
     const esSuperAdmin = auth.user?.is_super_admin ?? false;
     const [search, setSearch] = useState(filtros.search ?? '');
+
+    // --- Comentarios ---
+    const [comentariosOpen, setComentariosOpen] = useState(false);
+    const [comentariosCliente, setComentariosCliente] = useState<Cliente | null>(null);
+    const [tabComentario, setTabComentario] = useState<'seguimiento' | 'facturacion'>('seguimiento');
+    const [nuevoComentario, setNuevoComentario] = useState('');
+    const [enviandoComentario, setEnviandoComentario] = useState(false);
+    const [editandoId, setEditandoId] = useState<number | null>(null);
+    const [editContenido, setEditContenido] = useState('');
+
+    const abrirComentarios = (cliente: Cliente) => {
+        setComentariosCliente(cliente);
+        setTabComentario('seguimiento');
+        setNuevoComentario('');
+        setComentariosOpen(true);
+        // Carga bajo demanda: solo trae la prop 'comentarios' de ese cliente.
+        router.get('/clientes', { ...filtros, comentarios_de: cliente.id }, { only: ['comentarios'], preserveState: true, preserveScroll: true });
+    };
+
+    const agregarComentario = (e: FormEvent) => {
+        e.preventDefault();
+        if (! comentariosCliente || ! nuevoComentario.trim()) return;
+        setEnviandoComentario(true);
+        router.post(
+            `/clientes/${comentariosCliente.id}/comentarios`,
+            { tipo: tabComentario, contenido: nuevoComentario },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => setNuevoComentario(''),
+                onFinish: () => setEnviandoComentario(false),
+            },
+        );
+    };
+
+    const borrarComentario = (id: number) => {
+        router.delete(`/comentarios/${id}`, { preserveState: true, preserveScroll: true });
+    };
+
+    const iniciarEdicion = (c: Comentario) => {
+        setEditandoId(c.id);
+        setEditContenido(c.contenido);
+    };
+
+    const guardarEdicion = (id: number) => {
+        if (! editContenido.trim()) return;
+        router.put(`/comentarios/${id}`, { contenido: editContenido }, {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => setEditandoId(null),
+        });
+    };
+
+    // Comentarios del tab activo.
+    const comentariosVisibles = comentarios.filter((c) => c.tipo === tabComentario);
 
     const [open, setOpen] = useState(false);
     const [editando, setEditando] = useState<Cliente | null>(null);
@@ -252,6 +309,9 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
                                         )}
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-1">
+                                                <Button variant="ghost" size="icon" title="Comentarios" onClick={() => abrirComentarios(cliente)}>
+                                                    <MessageSquare className="size-4" />
+                                                </Button>
                                                 {can('clientes.editar') && (
                                                     <Button variant="ghost" size="icon" onClick={() => abrirEditar(cliente)}><Pencil className="size-4" /></Button>
                                                 )}
@@ -300,6 +360,93 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
                             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
                             <Button type="submit" disabled={processing}>{editando ? 'Guardar cambios' : 'Guardar cliente'}</Button>
                         </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Modal de comentarios */}
+            <Dialog open={comentariosOpen} onOpenChange={setComentariosOpen}>
+                <DialogContent className="sm:max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle>Comentarios — {comentariosCliente?.codigo_cliente}</DialogTitle>
+                        <DialogDescription>Seguimiento y observaciones del cliente.</DialogDescription>
+                    </DialogHeader>
+
+                    {/* Pestañas */}
+                    <div className="flex gap-2 border-b">
+                        <button
+                            type="button"
+                            onClick={() => setTabComentario('seguimiento')}
+                            className={`-mb-px border-b-2 px-3 py-2 text-sm ${tabComentario === 'seguimiento' ? 'border-primary font-medium' : 'border-transparent text-muted-foreground'}`}
+                        >
+                            Seguimiento
+                        </button>
+                        {puedeFacturacion && (
+                            <button
+                                type="button"
+                                onClick={() => setTabComentario('facturacion')}
+                                className={`-mb-px border-b-2 px-3 py-2 text-sm ${tabComentario === 'facturacion' ? 'border-primary font-medium' : 'border-transparent text-muted-foreground'}`}
+                            >
+                                Facturación
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Lista de comentarios */}
+                    <div className="max-h-72 space-y-3 overflow-y-auto">
+                        {comentariosVisibles.length === 0 ? (
+                            <p className="text-muted-foreground py-4 text-center text-sm">No hay comentarios de {tabComentario}.</p>
+                        ) : (
+                            comentariosVisibles.map((c) => (
+                                <div key={c.id} className="rounded-lg border p-3">
+                                    {editandoId === c.id ? (
+                                        <div className="space-y-2">
+                                            <textarea
+                                                value={editContenido}
+                                                onChange={(e) => setEditContenido(e.target.value)}
+                                                rows={3}
+                                                className="border-input bg-background focus-visible:ring-ring w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-1 focus-visible:outline-none"
+                                            />
+                                            <div className="flex justify-end gap-2">
+                                                <Button type="button" size="sm" variant="ghost" onClick={() => setEditandoId(null)}>Cancelar</Button>
+                                                <Button type="button" size="sm" onClick={() => guardarEdicion(c.id)}>Guardar</Button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <p className="text-sm whitespace-pre-wrap">{c.contenido}</p>
+                                            <div className="text-muted-foreground mt-2 flex items-center justify-between text-xs">
+                                                <span>{c.autor ?? 'Usuario'} · {c.fecha}</span>
+                                                {c.puede_borrar && (
+                                                    <div className="flex gap-3">
+                                                        <button type="button" onClick={() => iniciarEdicion(c)} className="hover:underline">
+                                                            Editar
+                                                        </button>
+                                                        <button type="button" onClick={() => borrarComentario(c.id)} className="text-destructive hover:underline">
+                                                            Eliminar
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            ))
+                        )}
+                    </div>
+
+                    {/* Agregar comentario */}
+                    <form onSubmit={agregarComentario} className="space-y-2">
+                        <textarea
+                            value={nuevoComentario}
+                            onChange={(e) => setNuevoComentario(e.target.value)}
+                            placeholder={`Escribe un comentario de ${tabComentario}...`}
+                            rows={3}
+                            className="border-input bg-background focus-visible:ring-ring w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-1 focus-visible:outline-none"
+                        />
+                        <div className="flex justify-end">
+                            <Button type="submit" disabled={enviandoComentario || ! nuevoComentario.trim()}>Agregar</Button>
+                        </div>
                     </form>
                 </DialogContent>
             </Dialog>

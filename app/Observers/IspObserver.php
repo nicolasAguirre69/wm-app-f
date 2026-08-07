@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Models\EstadoCliente;
 use App\Models\Isp;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -9,8 +10,8 @@ use Spatie\Permission\PermissionRegistrar;
 /**
  * Observer del modelo Isp.
  *
- * Cuando se crea un ISP, genera automáticamente sus 5 roles por defecto,
- * cada uno con sus permisos, aislados a ese ISP (team_id = isp->id).
+ * Cuando se crea un ISP, genera automáticamente sus 5 roles por defecto y
+ * el set estándar de estados de cliente (con colores universales).
  */
 class IspObserver
 {
@@ -27,10 +28,28 @@ class IspObserver
     ];
 
     /**
+     * Estados de cliente estándar (nombre => color universal de la paleta).
+     */
+    private const ESTADOS_POR_DEFECTO = [
+        'Activo' => '#22c55e',
+        'Suspendido' => '#f59e0b',
+        'Retirado' => '#ef4444',
+        'Pendiente' => '#3b82f6',
+    ];
+
+    /**
      * Se ejecuta automáticamente DESPUÉS de crear un ISP.
      */
     public function created(Isp $isp): void
     {
+        // Estados estándar del ISP.
+        foreach (self::ESTADOS_POR_DEFECTO as $nombre => $color) {
+            EstadoCliente::firstOrCreate(
+                ['isp_id' => $isp->id, 'nombre' => $nombre],
+                ['color' => $color],
+            );
+        }
+
         $registrar = app(PermissionRegistrar::class);
 
         // Fijamos el team activo al ISP recién creado, para que los roles

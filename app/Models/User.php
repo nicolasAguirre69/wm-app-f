@@ -65,4 +65,13 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Isp::class);
     }
+
+    /**
+     * ¿Puede ver/crear comentarios de facturación?
+     * Super Admin o usuarios con el rol 'Facturación' de su ISP.
+     */
+    public function puedeVerFacturacion(): bool
+    {
+        return $this->is_super_admin || $this->hasRole('Facturación');
+    }
 }

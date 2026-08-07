@@ -3,6 +3,7 @@
 use App\Http\Controllers\BarrioController;
 use App\Http\Controllers\CiudadController;
 use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\ComentarioController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EstadoClienteController;
 use App\Http\Controllers\PlanController;
@@ -46,6 +47,11 @@ Route::middleware(['auth', 'isp.active'])->group(function () {
         ->name('clientes.facturable');
 
     Route::resource('clientes', ClienteController::class)->except($sinFormularios);
+
+    // Comentarios de clientes.
+    Route::post('clientes/{cliente}/comentarios', [ComentarioController::class, 'store'])->name('comentarios.store');
+    Route::put('comentarios/{comentario}', [ComentarioController::class, 'update'])->name('comentarios.update');
+    Route::delete('comentarios/{comentario}', [ComentarioController::class, 'destroy'])->name('comentarios.destroy');
 });
 
 require __DIR__.'/settings.php';
