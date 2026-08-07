@@ -14,37 +14,45 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 1. Repuntar barrios a la ciudad canónica (el menor id por nombre).
-        DB::statement('
-            UPDATE barrios b
-            JOIN ciudades c ON b.ciudad_id = c.id
-            JOIN (SELECT nombre, MIN(id) AS keep_id FROM ciudades GROUP BY nombre) k
-                ON c.nombre = k.nombre
-            SET b.ciudad_id = k.keep_id
-        ');
+        // La fusión de duplicados solo aplica en MySQL con datos reales.
+        // En SQLite (tests) la tabla está vacía al migrar, así que se omite.
+        if (DB::getDriverName() === 'mysql') {
+            // 1. Repuntar barrios a la ciudad canónica (el menor id por nombre).
+            DB::statement('
+                UPDATE barrios b
+                JOIN ciudades c ON b.ciudad_id = c.id
+                JOIN (SELECT nombre, MIN(id) AS keep_id FROM ciudades GROUP BY nombre) k
+                    ON c.nombre = k.nombre
+                SET b.ciudad_id = k.keep_id
+            ');
 
-        // 2. Repuntar clientes de igual forma.
-        DB::statement('
-            UPDATE clientes cl
-            JOIN ciudades c ON cl.ciudad_id = c.id
-            JOIN (SELECT nombre, MIN(id) AS keep_id FROM ciudades GROUP BY nombre) k
-                ON c.nombre = k.nombre
-            SET cl.ciudad_id = k.keep_id
-        ');
+            // 2. Repuntar clientes de igual forma.
+            DB::statement('
+                UPDATE clientes cl
+                JOIN ciudades c ON cl.ciudad_id = c.id
+                JOIN (SELECT nombre, MIN(id) AS keep_id FROM ciudades GROUP BY nombre) k
+                    ON c.nombre = k.nombre
+                SET cl.ciudad_id = k.keep_id
+            ');
 
-        // 3. Borrar las ciudades duplicadas (ya nadie las referencia).
-        DB::statement('
-            DELETE c FROM ciudades c
-            JOIN (SELECT nombre, MIN(id) AS keep_id FROM ciudades GROUP BY nombre) k
-                ON c.nombre = k.nombre
-            WHERE c.id <> k.keep_id
-        ');
+            // 3. Borrar las ciudades duplicadas (ya nadie las referencia).
+            DB::statement('
+                DELETE c FROM ciudades c
+                JOIN (SELECT nombre, MIN(id) AS keep_id FROM ciudades GROUP BY nombre) k
+                    ON c.nombre = k.nombre
+                WHERE c.id <> k.keep_id
+            ');
+        }
 
-        // 4. Quitar el isp_id y su índice/llave; hacer el nombre único global.
+        // 4. Quitar la llave foránea, el índice único y la columna isp_id;
+        //    luego hacer el nombre único a nivel global.
         Schema::table('ciudades', function (Blueprint $table) {
             $table->dropForeign(['isp_id']);
             $table->dropUnique(['isp_id', 'nombre']);
             $table->dropColumn('isp_id');
+        });
+
+        Schema::table('ciudades', function (Blueprint $table) {
             $table->unique('nombre');
         });
     }
