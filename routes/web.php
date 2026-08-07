@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('welcome');
+    // Al entrar, va directo al login (o al dashboard si ya inició sesión).
+    return redirect()->route(auth()->check() ? 'dashboard' : 'login');
 })->name('home');
 
 Route::middleware(['auth', 'isp.active'])->group(function () {
