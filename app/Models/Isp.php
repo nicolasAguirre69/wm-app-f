@@ -28,6 +28,7 @@ class Isp extends Model
         'nombre',
         'tipo',
         'activo',
+        'id_producto',
     ];
 
     /**

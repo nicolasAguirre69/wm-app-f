@@ -8,6 +8,7 @@ namespace App\Enums;
 enum TipoContribuyente: string
 {
     case Natural = 'natural';
+    case RegimenComun = 'regimen_comun';
     case Juridica = 'juridica';
     case GranContribuyente = 'gran_contribuyente';
     case RegimenSimple = 'regimen_simple';
@@ -17,6 +18,7 @@ enum TipoContribuyente: string
     {
         return match ($this) {
             self::Natural => 'Persona natural',
+            self::RegimenComun => 'Régimen común',
             self::Juridica => 'Persona jurídica',
             self::GranContribuyente => 'Gran contribuyente',
             self::RegimenSimple => 'Régimen simple',

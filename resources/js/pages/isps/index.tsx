@@ -21,6 +21,7 @@ interface IspRow {
     tipo: string;
     tipo_label: string;
     activo: boolean;
+    id_producto: number | null;
     clientes_count: number;
     users_count: number;
     es_principal: boolean;
@@ -37,7 +38,7 @@ export default function IspsIndex({ isps, filtros }: Props) {
 
     const [open, setOpen] = useState(false);
     const [editando, setEditando] = useState<IspRow | null>(null);
-    const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({ nombre: '', activo: true });
+    const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({ nombre: '', activo: true, id_producto: '' });
 
     const abrirCrear = () => {
         reset();
@@ -48,7 +49,7 @@ export default function IspsIndex({ isps, filtros }: Props) {
 
     const abrirEditar = (isp: IspRow) => {
         clearErrors();
-        setData({ nombre: isp.nombre, activo: isp.activo });
+        setData({ nombre: isp.nombre, activo: isp.activo, id_producto: isp.id_producto != null ? String(isp.id_producto) : '' });
         setEditando(isp);
         setOpen(true);
     };
@@ -172,6 +173,12 @@ export default function IspsIndex({ isps, filtros }: Props) {
                             <Label htmlFor="nombre">Nombre</Label>
                             <Input id="nombre" value={data.nombre} onChange={(e) => setData('nombre', e.target.value)} autoFocus placeholder="Ej. Nube Net" />
                             <InputError message={errors.nombre} />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="id_producto">ID de producto (facturación)</Label>
+                            <Input id="id_producto" type="number" min={0} value={data.id_producto} onChange={(e) => setData('id_producto', e.target.value)} placeholder="Ej. 21" />
+                            <InputError message={errors.id_producto} />
                         </div>
 
                         <div className="flex items-center gap-2">

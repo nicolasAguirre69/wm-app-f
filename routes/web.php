@@ -53,6 +53,10 @@ Route::middleware(['auth', 'isp.active'])->group(function () {
         ->parameters(['usuarios' => 'user'])
         ->except($sinFormularios);
 
+    // Exportación de facturación (solo Super Admin) — antes del resource.
+    Route::get('clientes/exportar-facturacion', [ClienteController::class, 'exportarFacturacion'])
+        ->name('clientes.exportar');
+
     // Acción exclusiva del Super Admin: marcar facturable (antes del resource).
     Route::patch('clientes/{cliente}/facturable', [ClienteController::class, 'marcarFacturable'])
         ->name('clientes.facturable');

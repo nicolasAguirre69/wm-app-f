@@ -21,6 +21,7 @@ class Ciudad extends Model
 
     protected $fillable = [
         'nombre',
+        'codigo_dane',
     ];
 
     /**

@@ -10,8 +10,8 @@ export interface Auth {
 
 export interface Ciudad {
     id: number;
-    isp_id: number;
     nombre: string;
+    codigo_dane: string | null;
     created_at: string;
     updated_at: string;
 }

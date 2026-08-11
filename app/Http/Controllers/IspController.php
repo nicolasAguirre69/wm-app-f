@@ -32,6 +32,7 @@ class IspController extends Controller
                 'tipo' => $isp->tipo->value,
                 'tipo_label' => $isp->tipo->label(),
                 'activo' => $isp->activo,
+                'id_producto' => $isp->id_producto,
                 'clientes_count' => $isp->clientes_count,
                 'users_count' => $isp->users_count,
                 'es_principal' => $isp->tipo === TipoIsp::Principal,
@@ -52,6 +53,7 @@ class IspController extends Controller
             'nombre' => $request->validated('nombre'),
             'tipo' => TipoIsp::Cliente->value,
             'activo' => $request->boolean('activo', true),
+            'id_producto' => $request->validated('id_producto'),
         ]);
 
         return redirect()->route('isps.index')->with('success', 'ISP creado correctamente.');
@@ -65,6 +67,7 @@ class IspController extends Controller
         $isp->update([
             'nombre' => $request->validated('nombre'),
             'activo' => $request->boolean('activo'),
+            'id_producto' => $request->validated('id_producto'),
         ]);
 
         return redirect()->route('isps.index')->with('success', 'ISP actualizado correctamente.');

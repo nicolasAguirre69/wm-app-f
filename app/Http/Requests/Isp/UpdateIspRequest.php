@@ -25,6 +25,7 @@ class UpdateIspRequest extends FormRequest
                     ->ignore($this->route('isp')),
             ],
             'activo' => ['boolean'],
+            'id_producto' => ['nullable', 'integer', 'min:0'],
         ];
     }
 

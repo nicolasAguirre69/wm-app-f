@@ -30,6 +30,7 @@ class UpdateCiudadRequest extends FormRequest
                     ->whereNull('deleted_at')
                     ->ignore($this->route('ciudad')),
             ],
+            'codigo_dane' => ['nullable', 'string', 'max:10'],
         ];
     }
 

@@ -33,7 +33,7 @@ export default function CiudadesIndex({ ciudades, filtros }: Props) {
     // Estado del modal: abierto/cerrado y a quién estamos editando (null = crear).
     const [open, setOpen] = useState(false);
     const [editando, setEditando] = useState<Ciudad | null>(null);
-    const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({ nombre: '' });
+    const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({ nombre: '', codigo_dane: '' });
 
     const abrirCrear = () => {
         reset();
@@ -44,7 +44,7 @@ export default function CiudadesIndex({ ciudades, filtros }: Props) {
 
     const abrirEditar = (ciudad: Ciudad) => {
         clearErrors();
-        setData('nombre', ciudad.nombre);
+        setData({ nombre: ciudad.nombre, codigo_dane: ciudad.codigo_dane ?? '' });
         setEditando(ciudad);
         setOpen(true);
     };
@@ -184,6 +184,12 @@ export default function CiudadesIndex({ ciudades, filtros }: Props) {
                             <Label htmlFor="nombre">Nombre</Label>
                             <Input id="nombre" value={data.nombre} onChange={(e) => setData('nombre', e.target.value)} autoFocus placeholder="Ej. Bogotá" />
                             <InputError message={errors.nombre} />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="codigo_dane">Código de municipio (DANE)</Label>
+                            <Input id="codigo_dane" value={data.codigo_dane} onChange={(e) => setData('codigo_dane', e.target.value)} placeholder="Ej. 11001" />
+                            <InputError message={errors.codigo_dane} />
                         </div>
 
                         <DialogFooter>

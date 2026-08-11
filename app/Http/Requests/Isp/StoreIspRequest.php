@@ -23,6 +23,7 @@ class StoreIspRequest extends FormRequest
                 Rule::unique('isps', 'nombre')->whereNull('deleted_at'),
             ],
             'activo' => ['boolean'],
+            'id_producto' => ['nullable', 'integer', 'min:0'],
         ];
     }
 

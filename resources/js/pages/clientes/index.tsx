@@ -10,7 +10,7 @@ import { clienteSchema } from '@/lib/validations/cliente';
 import AppLayout from '@/layouts/app-layout';
 import { type BarrioSelect, type BreadcrumbItem, type Cliente, type Comentario, type EnumOption, type OpcionIsp, type OpcionSelect, type Paginated, type SharedData } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { ArrowDown, ArrowUp, ArrowUpDown, MessageSquare, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Download, MessageSquare, Pencil, Plus, Trash2 } from 'lucide-react';
 import { FormEvent, FormEventHandler, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Clientes', href: '/clientes' }];
@@ -224,9 +224,18 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
                         <h1 className="text-xl font-semibold">Clientes</h1>
                         <p className="text-muted-foreground text-sm">Administra los clientes de tu ISP.</p>
                     </div>
-                    {can('clientes.crear') && (
-                        <Button onClick={abrirCrear}><Plus className="size-4" /> Nuevo cliente</Button>
-                    )}
+                    <div className="flex gap-2">
+                        {esSuperAdmin && (
+                            <Button asChild variant="outline">
+                                <a href="/clientes/exportar-facturacion">
+                                    <Download className="size-4" /> Exportar facturación
+                                </a>
+                            </Button>
+                        )}
+                        {can('clientes.crear') && (
+                            <Button onClick={abrirCrear}><Plus className="size-4" /> Nuevo cliente</Button>
+                        )}
+                    </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">

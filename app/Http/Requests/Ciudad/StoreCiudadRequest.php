@@ -32,6 +32,7 @@ class StoreCiudadRequest extends FormRequest
                 Rule::unique('ciudades', 'nombre')
                     ->whereNull('deleted_at'),
             ],
+            'codigo_dane' => ['nullable', 'string', 'max:10'],
         ];
     }
 

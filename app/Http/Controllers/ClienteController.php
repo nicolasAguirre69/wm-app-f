@@ -124,6 +124,59 @@ class ClienteController extends Controller
     }
 
     /**
+     * Exporta en .txt (JSON) los clientes facturables y activos de todas las
+     * ISPs, para el sistema de facturación. Solo Super Admin.
+     */
+    public function exportarFacturacion(Request $request)
+    {
+        abort_unless($request->user()->is_super_admin, 403);
+
+        $clientes = Cliente::query()
+            ->where('facturable', true)
+            ->whereHas('estado', fn ($q) => $q->where('nombre', 'Activo'))
+            ->with(['isp:id,id_producto', 'barrio:id,nombre', 'ciudad:id,codigo_dane'])
+            ->get();
+
+        $data = $clientes->map(fn (Cliente $c) => [
+            'clienteIdentificacion' => $c->identificacion,
+            'tipoContribuyente' => $this->mapearContribuyente($c->tipo_contribuyente),
+            'tipoIdentificacion' => $c->tipo_identificacion?->value,
+            'clienteNombres' => trim($c->primer_nombre.' '.($c->segundo_nombre ?? '')),
+            'clienteApellidos' => trim($c->primer_apellido.' '.($c->segundo_apellido ?? '')),
+            'clienteTelefono' => $c->telefono_1,
+            'clienteCorreo' => $c->correo ?? '',
+            'clienteBarrio' => $c->barrio?->nombre ?? '',
+            'clienteDireccion' => $c->direccion,
+            'codigoMunicipioCliente' => $c->ciudad?->codigo_dane ?? '',
+            'idProducto' => $c->isp?->id_producto,
+        ])->values();
+
+        $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        $nombre = 'facturacion_'.now()->format('Y-m-d').'.txt';
+
+        return response($json, 200, [
+            'Content-Type' => 'text/plain; charset=utf-8',
+            'Content-Disposition' => 'attachment; filename="'.$nombre.'"',
+        ]);
+    }
+
+    /**
+     * Mapea el tipo de contribuyente al texto que espera la facturación.
+     */
+    private function mapearContribuyente(?\App\Enums\TipoContribuyente $tipo): string
+    {
+        return match ($tipo) {
+            \App\Enums\TipoContribuyente::RegimenComun => 'Regimen comun',
+            \App\Enums\TipoContribuyente::Natural => 'Persona natural',
+            \App\Enums\TipoContribuyente::Juridica => 'Persona juridica',
+            \App\Enums\TipoContribuyente::GranContribuyente => 'Gran contribuyente',
+            \App\Enums\TipoContribuyente::RegimenSimple => 'Regimen simplificado',
+            \App\Enums\TipoContribuyente::NoResponsableIva => 'No responsable de IVA',
+            default => '',
+        };
+    }
+
+    /**
      * Marca/desmarca facturable. Acción EXCLUSIVA del Super Admin.
      */
     public function marcarFacturable(Request $request, Cliente $cliente): RedirectResponse
