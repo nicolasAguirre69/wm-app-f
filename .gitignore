@@ -12,7 +12,7 @@
 /.zed
 /bootstrap/ssr
 /node_modules
-/public/build
+# /public/build  -> se incluye en git para desplegar en Plesk (sin Node en el servidor)
 /public/hot
 /public/storage
 /storage/*.key
