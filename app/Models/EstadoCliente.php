@@ -34,7 +34,15 @@ class EstadoCliente extends Model
         'isp_id',
         'nombre',
         'color',
+        'en_estadisticas',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'en_estadisticas' => 'boolean',
+        ];
+    }
 
     /**
      * Clientes que tienen este estado.

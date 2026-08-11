@@ -35,8 +35,9 @@ class ClienteController extends Controller
         return Inertia::render('clientes/index', [
             'clientes' => $clientes,
             'filtros' => $request->only('search', 'sort', 'direction', 'isp_id', 'facturable', 'estado'),
-            // Nombres de estado disponibles (según el rol: scope por ISP).
-            'estadosFiltro' => EstadoCliente::orderBy('nombre')->pluck('nombre')->unique()->values(),
+            // Nombres de estado disponibles para filtrar (solo los marcados).
+            'estadosFiltro' => EstadoCliente::where('en_estadisticas', true)
+                ->orderBy('nombre')->pluck('nombre')->unique()->values(),
             // Solo el Super Admin recibe la lista de ISPs para filtrar.
             'isps' => $request->user()->is_super_admin
                 ? \App\Models\Isp::orderBy('nombre')->get(['id', 'nombre'])

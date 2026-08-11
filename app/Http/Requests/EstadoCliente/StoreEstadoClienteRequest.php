@@ -27,6 +27,7 @@ class StoreEstadoClienteRequest extends FormRequest
                     ->whereNull('deleted_at'),
             ],
             'color' => ['required', Rule::in(\App\Models\EstadoCliente::COLORES)],
+            'en_estadisticas' => ['boolean'],
         ];
     }
 

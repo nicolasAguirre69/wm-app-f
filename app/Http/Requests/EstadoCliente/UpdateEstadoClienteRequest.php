@@ -28,6 +28,7 @@ class UpdateEstadoClienteRequest extends FormRequest
                     ->ignore($this->route('estado')),
             ],
             'color' => ['required', Rule::in(\App\Models\EstadoCliente::COLORES)],
+            'en_estadisticas' => ['boolean'],
         ];
     }
 

@@ -43,6 +43,7 @@ export interface TipoCatalogo {
     id: number;
     nombre: string;
     color?: string; // solo lo usan los estados de cliente
+    en_estadisticas?: boolean; // solo estados: aparece en dashboard/filtros
 }
 
 export interface Plan {

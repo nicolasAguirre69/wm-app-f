@@ -1,6 +1,7 @@
 import InputError from '@/components/input-error';
 import { Pagination } from '@/components/pagination';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -42,7 +43,7 @@ export default function EstadosIndex({ estados, filtros }: Props) {
 
     const [open, setOpen] = useState(false);
     const [editando, setEditando] = useState<TipoCatalogo | null>(null);
-    const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({ nombre: '', color: '#22c55e' });
+    const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({ nombre: '', color: '#22c55e', en_estadisticas: true });
 
     const abrirCrear = () => {
         reset();
@@ -53,7 +54,7 @@ export default function EstadosIndex({ estados, filtros }: Props) {
 
     const abrirEditar = (estado: TipoCatalogo) => {
         clearErrors();
-        setData({ nombre: estado.nombre, color: estado.color ?? '#22c55e' });
+        setData({ nombre: estado.nombre, color: estado.color ?? '#22c55e', en_estadisticas: estado.en_estadisticas ?? true });
         setEditando(estado);
         setOpen(true);
     };
@@ -139,6 +140,9 @@ export default function EstadosIndex({ estados, filtros }: Props) {
                                             <span className="flex items-center gap-2">
                                                 <span className="size-3 rounded-full border" style={{ backgroundColor: estado.color ?? '#e5e7eb' }} />
                                                 {estado.nombre}
+                                                {estado.en_estadisticas === false && (
+                                                    <span className="text-muted-foreground text-xs">(oculto en estadísticas)</span>
+                                                )}
                                             </span>
                                         </TableCell>
                                         <TableCell className="text-right">
@@ -191,6 +195,11 @@ export default function EstadosIndex({ estados, filtros }: Props) {
                                 ))}
                             </div>
                             <InputError message={errors.color} />
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <Checkbox id="en_estadisticas" checked={data.en_estadisticas} onCheckedChange={(c) => setData('en_estadisticas', c === true)} />
+                            <Label htmlFor="en_estadisticas" className="text-sm font-normal">Mostrar en estadísticas y filtros</Label>
                         </div>
 
                         <DialogFooter>

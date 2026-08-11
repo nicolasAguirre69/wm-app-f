@@ -1,6 +1,7 @@
 import { ClienteFormFields, type ClienteFormValues } from '@/components/cliente-form-fields';
 import { Pagination } from '@/components/pagination';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,7 +11,7 @@ import { clienteSchema } from '@/lib/validations/cliente';
 import AppLayout from '@/layouts/app-layout';
 import { type BarrioSelect, type BreadcrumbItem, type Cliente, type Comentario, type EnumOption, type OpcionIsp, type OpcionSelect, type Paginated, type SharedData } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { ArrowDown, ArrowUp, ArrowUpDown, Download, MessageSquare, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Download, Filter, MessageSquare, Pencil, Plus, Trash2 } from 'lucide-react';
 import { FormEvent, FormEventHandler, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Clientes', href: '/clientes' }];
@@ -281,6 +282,19 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
                         <Button type="button" variant="ghost" onClick={() => { setSearch(''); router.get('/clientes', {}, { preserveState: true, replace: true }); }}>Limpiar filtros</Button>
                     )}
                 </div>
+
+                {/* Total según el filtro aplicado (Super Admin). */}
+                {esSuperAdmin && (
+                    <Card className="sm:max-w-xs">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-sm font-medium">Clientes según el filtro</CardTitle>
+                            <Filter className="text-muted-foreground size-4" />
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-3xl font-bold">{clientes.total}</p>
+                        </CardContent>
+                    </Card>
+                )}
 
                 <div className="rounded-xl border">
                     <Table>

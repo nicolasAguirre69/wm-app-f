@@ -29,8 +29,9 @@ class DashboardService
                 ->whereMonth('created_at', Carbon::now()->month)
                 ->count(),
 
-            // Un dato por estado: nombre, color y cuántos clientes lo tienen.
+            // Un dato por estado (solo los marcados para estadísticas).
             'porEstado' => EstadoCliente::withCount('clientes')
+                ->where('en_estadisticas', true)
                 ->orderBy('nombre')
                 ->get()
                 ->map(fn (EstadoCliente $e) => [
@@ -69,6 +70,8 @@ class DashboardService
             'esGlobal' => true,
             'totalIsps' => Isp::count(),
             'totalClientes' => Cliente::count(),
+            // Clientes listos para facturar (marcados como facturables).
+            'facturables' => Cliente::where('facturable', true)->count(),
             'nuevosEsteMes' => Cliente::whereYear('created_at', Carbon::now()->year)
                 ->whereMonth('created_at', Carbon::now()->month)
                 ->count(),
@@ -89,6 +92,7 @@ class DashboardService
                     $join->on('clientes.estado_id', '=', 'estados_cliente.id')
                         ->whereNull('clientes.deleted_at');
                 })
+                ->where('estados_cliente.en_estadisticas', true)
                 ->selectRaw('estados_cliente.nombre as nombre, MIN(estados_cliente.color) as color, count(clientes.id) as total')
                 ->groupBy('estados_cliente.nombre')
                 ->orderBy('estados_cliente.nombre')
@@ -100,6 +104,7 @@ class DashboardService
                 ->join('estados_cliente', 'clientes.estado_id', '=', 'estados_cliente.id')
                 ->join('isps', 'clientes.isp_id', '=', 'isps.id')
                 ->whereNull('estados_cliente.deleted_at')
+                ->where('estados_cliente.en_estadisticas', true)
                 ->selectRaw('estados_cliente.nombre as estado, isps.nombre as isp, count(*) as total')
                 ->groupBy('estados_cliente.nombre', 'isps.nombre')
                 ->orderBy('isps.nombre')

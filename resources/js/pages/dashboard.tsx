@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
-import { Building2, TrendingUp, UserPlus, Users } from 'lucide-react';
+import { Building2, Receipt, TrendingUp, UserPlus, Users } from 'lucide-react';
 import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
@@ -31,6 +31,7 @@ interface Props {
     porPlan?: NombreTotal[];
     // Global
     totalIsps?: number;
+    facturables?: number;
     porIsp?: NombreTotal[];
     porEstadoGlobal?: EstadoStat[];
     desglosePorEstado?: Record<string, NombreTotal[]>;
@@ -83,17 +84,28 @@ export default function Dashboard(props: Props) {
 }
 
 // --- Vista del Super Admin (global) ---
-function DashboardGlobal({ totalIsps = 0, totalClientes = 0, nuevosEsteMes = 0, porIsp = [], porEstadoGlobal = [], desglosePorEstado = {}, crecimiento = [] }: Props) {
+function DashboardGlobal({ totalIsps = 0, totalClientes = 0, facturables = 0, nuevosEsteMes = 0, porIsp = [], porEstadoGlobal = [], desglosePorEstado = {}, crecimiento = [] }: Props) {
     const maxMes = Math.max(1, ...crecimiento.map((m) => m.total));
     // Estado seleccionado para el modal de desglose por ISP.
     const [estadoSel, setEstadoSel] = useState<EstadoStat | null>(null);
 
     return (
         <div className="flex h-full flex-1 flex-col gap-6 p-4">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <StatCard titulo="Total de ISPs" valor={totalIsps}><Building2 className="text-muted-foreground size-4" /></StatCard>
                 <StatCard titulo="Clientes en la plataforma" valor={totalClientes}><Users className="text-muted-foreground size-4" /></StatCard>
                 <StatCard titulo="Nuevos este mes" valor={nuevosEsteMes}><UserPlus className="text-muted-foreground size-4" /></StatCard>
+
+                {/* Listos para facturar (destacado) */}
+                <Card className="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium text-green-800 dark:text-green-300">Listos para facturar</CardTitle>
+                        <Receipt className="size-4 text-green-600" />
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-3xl font-bold text-green-700 dark:text-green-300">{facturables}</p>
+                    </CardContent>
+                </Card>
             </div>
 
             {/* Clientes por estado (global). Clic → desglose por ISP en un modal. */}
