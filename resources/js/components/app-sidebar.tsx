@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { LayoutGrid, MapPin, Package, Tag, Users } from 'lucide-react';
+import { Building2, LayoutGrid, MapPin, Package, Tag, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 
 export function AppSidebar() {
@@ -17,8 +17,8 @@ export function AppSidebar() {
     ];
 
     if (esSuperAdmin) {
-        // El Super Admin administra la configuración global (ciudades) y no
-        // los catálogos operativos de cada ISP.
+        // El Super Admin administra la plataforma: ISPs y config global.
+        mainNavItems.push({ title: 'ISPs', url: '/isps', icon: Building2 });
         mainNavItems.push({ title: 'Ciudades', url: '/ciudades', icon: MapPin });
     } else {
         // El usuario de ISP administra sus propios catálogos.

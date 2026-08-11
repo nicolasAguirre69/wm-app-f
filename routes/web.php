@@ -6,6 +6,7 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ComentarioController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EstadoClienteController;
+use App\Http\Controllers\IspController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\RedController;
 use Illuminate\Support\Facades\Route;
@@ -42,6 +43,9 @@ Route::middleware(['auth', 'isp.active'])->group(function () {
     Route::resource('estados', EstadoClienteController::class)
         ->parameters(['estados' => 'estado'])
         ->except($sinFormularios);
+
+    // Gestión de ISPs (solo Super Admin).
+    Route::resource('isps', IspController::class)->except($sinFormularios);
 
     // Acción exclusiva del Super Admin: marcar facturable (antes del resource).
     Route::patch('clientes/{cliente}/facturable', [ClienteController::class, 'marcarFacturable'])
