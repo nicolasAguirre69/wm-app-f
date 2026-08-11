@@ -48,6 +48,11 @@ class ClienteService
                 isset($filtros['facturable']) && $filtros['facturable'] !== '',
                 fn (Builder $q) => $q->where('facturable', $filtros['facturable'] === '1')
             )
+            // Filtro por estado del cliente (por nombre, universal entre ISPs).
+            ->when(
+                ! empty($filtros['estado']),
+                fn (Builder $q) => $q->whereHas('estado', fn (Builder $e) => $e->where('nombre', $filtros['estado']))
+            )
             ->orderBy($filtros['sort'] ?? 'created_at', $filtros['direction'] ?? 'desc')
             ->paginate(10)
             ->withQueryString();

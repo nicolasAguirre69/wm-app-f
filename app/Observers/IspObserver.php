@@ -32,9 +32,9 @@ class IspObserver
      */
     private const ESTADOS_POR_DEFECTO = [
         'Activo' => '#22c55e',
-        'Suspendido' => '#f59e0b',
+        'Suspendido' => '#3b82f6',
         'Retirado' => '#ef4444',
-        'Pendiente' => '#3b82f6',
+        'Corte' => '#f59e0b',
     ];
 
     /**

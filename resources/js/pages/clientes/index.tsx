@@ -22,6 +22,7 @@ interface Filtros {
     direction?: string;
     isp_id?: string;
     facturable?: string;
+    estado?: string;
 }
 
 interface Props {
@@ -36,6 +37,7 @@ interface Props {
     tiposContribuyente: EnumOption[];
     comentarios: Comentario[];
     puedeFacturacion: boolean;
+    estadosFiltro: string[];
 }
 
 const vacio = (): ClienteFormValues & { _method: string } => ({
@@ -48,7 +50,7 @@ const vacio = (): ClienteFormValues & { _method: string } => ({
     documento_digitalizado: null,
 });
 
-export default function ClientesIndex({ clientes, filtros, isps, ciudades, barrios, planes, estados, tiposIdentificacion, tiposContribuyente, comentarios, puedeFacturacion }: Props) {
+export default function ClientesIndex({ clientes, filtros, isps, ciudades, barrios, planes, estados, tiposIdentificacion, tiposContribuyente, comentarios, puedeFacturacion, estadosFiltro }: Props) {
     const { can } = usePermissions();
     const { auth, flash } = usePage<SharedData>().props;
     const esSuperAdmin = auth.user?.is_super_admin ?? false;
@@ -175,7 +177,7 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
         router.get('/clientes', { ...filtros, search }, { preserveState: true, replace: true });
     };
 
-    const filtrar = (clave: 'isp_id' | 'facturable', valor: string) => {
+    const filtrar = (clave: 'isp_id' | 'facturable' | 'estado', valor: string) => {
         router.get('/clientes', { ...filtros, [clave]: valor === TODOS ? undefined : valor }, { preserveState: true, replace: true });
     };
 
@@ -254,6 +256,15 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
                         </Select>
                     )}
 
+                    {/* Filtro por estado del cliente. */}
+                    <Select value={filtros.estado ?? TODOS} onValueChange={(v) => filtrar('estado', v)}>
+                        <SelectTrigger className="w-48"><SelectValue placeholder="Estado" /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value={TODOS}>Todos los estados</SelectItem>
+                            {estadosFiltro.map((e) => (<SelectItem key={e} value={e}>{e}</SelectItem>))}
+                        </SelectContent>
+                    </Select>
+
                     {/* Filtro de facturable: EXCLUSIVO del Super Admin. */}
                     {esSuperAdmin && (
                         <Select value={filtros.facturable ?? TODOS} onValueChange={(v) => filtrar('facturable', v)}>
@@ -266,7 +277,7 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
                         </Select>
                     )}
 
-                    {(filtros.search || filtros.isp_id || filtros.facturable) && (
+                    {(filtros.search || filtros.isp_id || filtros.facturable || filtros.estado) && (
                         <Button type="button" variant="ghost" onClick={() => { setSearch(''); router.get('/clientes', {}, { preserveState: true, replace: true }); }}>Limpiar filtros</Button>
                     )}
                 </div>

@@ -21,9 +21,9 @@ class EstadoClienteSeeder extends Seeder
 
         $estados = [
             'Activo' => '#22c55e',      // verde
-            'Suspendido' => '#f59e0b',  // ámbar
+            'Suspendido' => '#3b82f6',  // azul
             'Retirado' => '#ef4444',    // rojo
-            'Pendiente' => '#3b82f6',   // azul
+            'Corte' => '#f59e0b',       // ámbar
         ];
 
         foreach ($estados as $nombre => $color) {
