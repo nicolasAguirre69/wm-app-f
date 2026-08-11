@@ -1,13 +1,15 @@
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { usePermissions } from '@/hooks/use-permissions';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { Building2, LayoutGrid, MapPin, Package, Tag, Users } from 'lucide-react';
+import { Building2, LayoutGrid, MapPin, Package, Tag, UserCog, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 
 export function AppSidebar() {
     const { auth } = usePage<SharedData>().props;
+    const { can } = usePermissions();
     const esSuperAdmin = auth.user?.is_super_admin ?? false;
 
     // Menú según el rol.
@@ -17,9 +19,17 @@ export function AppSidebar() {
     ];
 
     if (esSuperAdmin) {
-        // El Super Admin administra la plataforma: ISPs y config global.
-        mainNavItems.push({ title: 'ISPs', url: '/isps', icon: Building2 });
-        mainNavItems.push({ title: 'Ciudades', url: '/ciudades', icon: MapPin });
+        // El Super Admin administra la plataforma: ISPs y usuarios agrupados.
+        mainNavItems.push({
+            title: 'Administración',
+            url: '#',
+            icon: Building2,
+            items: [
+                { title: 'ISPs', url: '/isps' },
+                { title: 'Usuarios', url: '/usuarios' },
+                { title: 'Ciudades', url: '/ciudades' },
+            ],
+        });
     } else {
         // El usuario de ISP administra sus propios catálogos.
         mainNavItems.push({
@@ -33,6 +43,11 @@ export function AppSidebar() {
         });
         mainNavItems.push({ title: 'Planes', url: '/planes', icon: Package });
         mainNavItems.push({ title: 'Estados de cliente', url: '/estados', icon: Tag });
+
+        // Usuarios: solo para Administradores de ISP (con permiso).
+        if (can('usuarios.ver')) {
+            mainNavItems.push({ title: 'Usuarios', url: '/usuarios', icon: UserCog });
+        }
     }
 
     return (
