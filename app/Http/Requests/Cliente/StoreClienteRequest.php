@@ -71,6 +71,9 @@ class StoreClienteRequest extends FormRequest
 
             // Documento: opcional. Si viene, debe ser PDF o imagen, máx 5 MB.
             'documento_digitalizado' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
+
+            // Traslado: si el cliente ya existe en otra ISP, retirarlo allá.
+            'trasladar' => ['nullable', 'boolean'],
         ];
     }
 

@@ -65,6 +65,10 @@ Route::middleware(['auth', 'isp.active'])->group(function () {
     Route::patch('clientes/{cliente}/estado', [ClienteController::class, 'cambiarEstado'])
         ->name('clientes.estado');
 
+    // Detección de traslado: ¿esta identificación ya existe en otra ISP?
+    Route::get('clientes/buscar-identificacion', [ClienteController::class, 'buscarPorIdentificacion'])
+        ->name('clientes.buscar-identificacion');
+
     Route::resource('clientes', ClienteController::class)->except($sinFormularios);
 
     // Comentarios de clientes.

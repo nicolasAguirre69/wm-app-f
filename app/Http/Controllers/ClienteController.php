@@ -93,6 +93,7 @@ class ClienteController extends Controller
         $this->clienteService->crear(
             $request->validated(),
             $request->file('documento_digitalizado'),
+            $request->boolean('trasladar'),
         );
 
         return redirect()
@@ -199,6 +200,46 @@ class ClienteController extends Controller
         );
 
         return back()->with('success', 'Estado de facturación actualizado.');
+    }
+
+    /**
+     * Detección de traslado: dice si esa identificación ya existe en OTRA ISP.
+     * Lo consulta el formulario de alta para ofrecer trasladar en vez de duplicar.
+     */
+    public function buscarPorIdentificacion(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $this->authorize('create', Cliente::class);
+
+        $request->validate(['identificacion' => ['required', 'string', 'max:255']]);
+
+        $ispActual = $request->user()->isp_id;
+
+        $existente = Cliente::withoutGlobalScope(\App\Models\Scopes\IspScope::class)
+            ->where('identificacion', $request->input('identificacion'))
+            ->when($ispActual, fn ($q) => $q->where('isp_id', '!=', $ispActual))
+            ->with('isp:id,nombre')
+            ->first();
+
+        if (! $existente) {
+            return response()->json(['existe' => false]);
+        }
+
+        return response()->json([
+            'existe' => true,
+            'isp' => $existente->isp?->nombre,
+            // Datos personales para pre-llenar el formulario (ahorra retipear).
+            'cliente' => [
+                'tipo_identificacion' => $existente->tipo_identificacion?->value,
+                'tipo_contribuyente' => $existente->tipo_contribuyente?->value,
+                'primer_nombre' => $existente->primer_nombre,
+                'segundo_nombre' => $existente->segundo_nombre,
+                'primer_apellido' => $existente->primer_apellido,
+                'segundo_apellido' => $existente->segundo_apellido,
+                'telefono_1' => $existente->telefono_1,
+                'telefono_2' => $existente->telefono_2,
+                'correo' => $existente->correo,
+            ],
+        ]);
     }
 
     /**

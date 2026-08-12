@@ -3,10 +3,13 @@
 namespace App\Services;
 
 use App\Models\Cliente;
+use App\Models\EstadoCliente;
+use App\Models\Scopes\IspScope;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -71,19 +74,56 @@ class ClienteService
      *
      * @param  array<string, mixed>  $datos
      */
-    public function crear(array $datos, ?UploadedFile $documento): Cliente
+    public function crear(array $datos, ?UploadedFile $documento, bool $trasladar = false): Cliente
     {
-        // Nunca dejamos el archivo crudo en los datos del modelo.
-        unset($datos['documento_digitalizado']);
+        // Todo el traslado va en una transacción: o se crea el nuevo Y se retira
+        // el anterior, o no pasa nada. Evita facturar dos veces por un fallo a medias.
+        return DB::transaction(function () use ($datos, $documento, $trasladar) {
+            // Campos que no van al modelo.
+            unset($datos['documento_digitalizado'], $datos['trasladar']);
 
-        if ($documento) {
-            $datos['documento_digitalizado'] = $documento->store(self::CARPETA_DOCS, 'public');
+            if ($documento) {
+                $datos['documento_digitalizado'] = $documento->store(self::CARPETA_DOCS, 'public');
+            }
+
+            // El usuario creador es el autenticado.
+            $datos['usuario_creador_id'] = Auth::id();
+
+            $cliente = Cliente::create($datos);
+
+            // Si es un traslado, retiramos al mismo cliente en las demás ISP.
+            if ($trasladar) {
+                $this->retirarEnOtrasIsps($cliente);
+            }
+
+            return $cliente;
+        });
+    }
+
+    /**
+     * Marca como "Retirado" (y no facturable) al mismo cliente —misma
+     * identificación— en las demás ISP, para que no se le facture dos veces
+     * tras un traslado. Cada ISP tiene su propio estado "Retirado".
+     */
+    private function retirarEnOtrasIsps(Cliente $nuevo): void
+    {
+        $otros = Cliente::withoutGlobalScope(IspScope::class)
+            ->where('identificacion', $nuevo->identificacion)
+            ->where('id', '!=', $nuevo->id)
+            ->where('isp_id', '!=', $nuevo->isp_id)
+            ->get();
+
+        foreach ($otros as $otro) {
+            $retirado = EstadoCliente::withoutGlobalScope(IspScope::class)
+                ->where('isp_id', $otro->isp_id)
+                ->where('nombre', 'Retirado')
+                ->first();
+
+            // Si esa ISP no tiene el estado "Retirado", no tocamos el registro.
+            if ($retirado) {
+                $otro->update(['estado_id' => $retirado->id, 'facturable' => false]);
+            }
         }
-
-        // El usuario creador es el autenticado (null si es consola/super admin sin sesión web).
-        $datos['usuario_creador_id'] = Auth::id();
-
-        return Cliente::create($datos);
     }
 
     /**
