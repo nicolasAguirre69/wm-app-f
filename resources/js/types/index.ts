@@ -87,7 +87,7 @@ export interface Cliente {
     isp?: TipoCatalogo;
     ciudad?: TipoCatalogo;
     barrio?: TipoCatalogo;
-    plan?: { id: number; tipo_servicio?: TipoCatalogo };
+    plan?: { id: number; valor: string; tipo_servicio?: TipoCatalogo };
     estado?: TipoCatalogo;
     created_at: string;
     updated_at: string;

@@ -61,6 +61,10 @@ Route::middleware(['auth', 'isp.active'])->group(function () {
     Route::patch('clientes/{cliente}/facturable', [ClienteController::class, 'marcarFacturable'])
         ->name('clientes.facturable');
 
+    // Alternar estado Activo <-> Corte desde la lista (antes del resource).
+    Route::patch('clientes/{cliente}/estado', [ClienteController::class, 'cambiarEstado'])
+        ->name('clientes.estado');
+
     Route::resource('clientes', ClienteController::class)->except($sinFormularios);
 
     // Comentarios de clientes.

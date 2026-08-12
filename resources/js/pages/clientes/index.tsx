@@ -208,6 +208,17 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
         }
     };
 
+    // Alterna Activo <-> Corte con un clic. Solo actúa sobre esos dos estados.
+    const toggleEstado = (c: Cliente) => {
+        const n = c.estado?.nombre;
+        if (n !== 'Activo' && n !== 'Corte') return;
+        router.patch(`/clientes/${c.id}/estado`, {}, { preserveScroll: true });
+    };
+
+    // Formatea el valor del plan como pesos colombianos, sin decimales.
+    const formatearValor = (valor?: string) =>
+        valor == null ? '—' : new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(Number(valor));
+
     const nombreCompleto = (c: Cliente) => [c.primer_nombre, c.segundo_nombre, c.primer_apellido, c.segundo_apellido].filter(Boolean).join(' ');
     const mergedErrors = { ...errors, ...clientErrors };
 
@@ -219,6 +230,11 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
                 {flash.success && (
                     <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-800 dark:border-green-900 dark:bg-green-950 dark:text-green-300">
                         {flash.success}
+                    </div>
+                )}
+                {flash.error && (
+                    <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+                        {flash.error}
                     </div>
                 )}
 
@@ -308,7 +324,9 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
                                 <TableHead>Nombre</TableHead>
                                 {esSuperAdmin && <TableHead>ISP</TableHead>}
                                 <TableHead>Identificación</TableHead>
+                                <TableHead>Dirección</TableHead>
                                 <TableHead>Servicio</TableHead>
+                                <TableHead className="text-right">Valor</TableHead>
                                 <TableHead>Estado</TableHead>
                                 {esSuperAdmin && <TableHead>Facturable</TableHead>}
                                 <TableHead className="w-32 text-right">Acciones</TableHead>
@@ -317,7 +335,7 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
                         <TableBody>
                             {clientes.data.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={esSuperAdmin ? 8 : 6} className="text-muted-foreground py-8 text-center">No hay clientes registrados.</TableCell>
+                                    <TableCell colSpan={esSuperAdmin ? 10 : 8} className="text-muted-foreground py-8 text-center">No hay clientes registrados.</TableCell>
                                 </TableRow>
                             ) : (
                                 clientes.data.map((cliente) => (
@@ -326,12 +344,23 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
                                         <TableCell>{nombreCompleto(cliente)}</TableCell>
                                         {esSuperAdmin && <TableCell>{cliente.isp?.nombre ?? '—'}</TableCell>}
                                         <TableCell>{cliente.identificacion}</TableCell>
+                                        <TableCell className="max-w-48 truncate" title={cliente.direccion}>{cliente.direccion || '—'}</TableCell>
                                         <TableCell>{cliente.plan?.tipo_servicio?.nombre ?? '—'}</TableCell>
+                                        <TableCell className="text-right tabular-nums">{formatearValor(cliente.plan?.valor)}</TableCell>
                                         <TableCell>
-                                            <span className="flex items-center gap-2">
-                                                <span className="size-2.5 rounded-full border" style={{ backgroundColor: cliente.estado?.color ?? '#e5e7eb' }} />
-                                                {cliente.estado?.nombre ?? '—'}
-                                            </span>
+                                            {can('clientes.editar') && (cliente.estado?.nombre === 'Activo' || cliente.estado?.nombre === 'Corte') ? (
+                                                <button type="button" onClick={() => toggleEstado(cliente)}
+                                                    title={`Clic para cambiar a ${cliente.estado?.nombre === 'Activo' ? 'Corte' : 'Activo'}`}
+                                                    className="hover:bg-foreground/10 flex items-center gap-2 rounded px-1.5 py-0.5 transition">
+                                                    <span className="size-2.5 rounded-full border" style={{ backgroundColor: cliente.estado?.color ?? '#e5e7eb' }} />
+                                                    {cliente.estado?.nombre}
+                                                </button>
+                                            ) : (
+                                                <span className="flex items-center gap-2">
+                                                    <span className="size-2.5 rounded-full border" style={{ backgroundColor: cliente.estado?.color ?? '#e5e7eb' }} />
+                                                    {cliente.estado?.nombre ?? '—'}
+                                                </span>
+                                            )}
                                         </TableCell>
                                         {esSuperAdmin && (
                                             <TableCell>

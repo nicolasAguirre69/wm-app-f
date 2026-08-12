@@ -202,6 +202,39 @@ class ClienteController extends Controller
     }
 
     /**
+     * Alterna el estado del cliente entre "Activo" y "Corte".
+     * Es la operación diaria de la oficina (cortar / reactivar el servicio)
+     * con un solo clic desde la lista. Cualquier otro estado no se toca.
+     */
+    public function cambiarEstado(Cliente $cliente): RedirectResponse
+    {
+        $this->authorize('update', $cliente);
+
+        $destino = match ($cliente->estado?->nombre) {
+            'Activo' => 'Corte',
+            'Corte' => 'Activo',
+            default => null,
+        };
+
+        if ($destino === null) {
+            return back()->with('error', 'Solo se puede alternar entre Activo y Corte.');
+        }
+
+        // Buscamos el estado destino DENTRO del mismo ISP del cliente.
+        $estadoDestino = EstadoCliente::where('isp_id', $cliente->isp_id)
+            ->where('nombre', $destino)
+            ->first();
+
+        if (! $estadoDestino) {
+            return back()->with('error', "El estado \"{$destino}\" no existe en este ISP.");
+        }
+
+        $cliente->update(['estado_id' => $estadoDestino->id]);
+
+        return back()->with('success', "Cliente cambiado a \"{$destino}\".");
+    }
+
+    /**
      * Catálogos (por ISP) + enums para los formularios.
      *
      * @return array<string, mixed>
