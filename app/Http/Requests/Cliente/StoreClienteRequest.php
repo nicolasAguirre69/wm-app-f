@@ -69,8 +69,8 @@ class StoreClienteRequest extends FormRequest
             'fecha_instalacion' => ['nullable', 'date'],
             'dia_corte' => ['nullable', 'integer', 'between:1,31'],
 
-            // Documento: archivo PDF o imagen, máx 5 MB.
-            'documento_digitalizado' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
+            // Documento: opcional. Si viene, debe ser PDF o imagen, máx 5 MB.
+            'documento_digitalizado' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
         ];
     }
 
@@ -84,7 +84,6 @@ class StoreClienteRequest extends FormRequest
             'barrio_id.exists' => 'El barrio no es válido o no pertenece a la ciudad seleccionada.',
             'correo.email' => 'El correo no tiene un formato válido.',
             'dia_corte.between' => 'El día de corte debe estar entre 1 y 31.',
-            'documento_digitalizado.required' => 'Debes adjuntar el documento digitalizado.',
             'documento_digitalizado.mimes' => 'El documento debe ser PDF, JPG o PNG.',
             'documento_digitalizado.max' => 'El documento no puede superar 5 MB.',
         ];

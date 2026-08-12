@@ -255,7 +255,7 @@ export function ClienteFormFields({
             <section className="space-y-4">
                 <h2 className="text-sm font-semibold text-muted-foreground uppercase">Documento</h2>
                 <div className="grid gap-2">
-                    <Label htmlFor="documento_digitalizado">Documento digitalizado (PDF, JPG o PNG)</Label>
+                    <Label htmlFor="documento_digitalizado">Documento digitalizado (PDF, JPG o PNG) — opcional</Label>
                     <Input
                         id="documento_digitalizado"
                         type="file"

@@ -6,10 +6,11 @@ const requerido = (campo: string) => `${campo} es obligatorio.`;
 /**
  * Esquema de validación del formulario de cliente.
  *
- * @param esCreacion  En creación el documento es obligatorio; al editar no
- *                    (si no se sube uno nuevo, se conserva el actual).
+ * @param esCreacion  Reservado por si en el futuro cambian reglas según crear/editar.
+ *                    El documento es opcional en ambos casos.
  */
 export function clienteSchema(esCreacion: boolean) {
+    void esCreacion;
     return z.object({
         codigo_cliente: z.string().min(1, requerido('El código')),
         tipo_identificacion: z.string().min(1, requerido('El tipo de identificación')),
@@ -37,9 +38,8 @@ export function clienteSchema(esCreacion: boolean) {
         fecha_instalacion: z.string().optional(),
         dia_corte: z.string().optional().refine((v) => !v || (Number(v) >= 1 && Number(v) <= 31), 'El día de corte debe estar entre 1 y 31.'),
 
-        documento_digitalizado: esCreacion
-            ? z.instanceof(File, { message: 'Debes adjuntar el documento.' })
-            : z.instanceof(File).nullable().optional(),
+        // Documento opcional: si se sube, debe ser un archivo; si no, se omite.
+        documento_digitalizado: z.instanceof(File).nullable().optional(),
     });
 }
 
