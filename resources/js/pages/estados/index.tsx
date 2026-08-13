@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { usePermissions } from '@/hooks/use-permissions';
+import { navegarConFiltros } from '@/lib/filtros';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type Paginated, type SharedData, type TipoCatalogo } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
@@ -62,18 +63,18 @@ export default function EstadosIndex({ estados, filtros }: Props) {
     const guardar: FormEventHandler = (e) => {
         e.preventDefault();
         const opciones = { onSuccess: () => { setOpen(false); reset(); setEditando(null); } };
-        if (editando) put(`/estados/${editando.id}`, opciones);
+        if (editando) put(`/estados/${editando.hashid}`, opciones);
         else post('/estados', opciones);
     };
 
     const buscar = (e: FormEvent) => {
         e.preventDefault();
-        router.get('/estados', { search }, { preserveState: true, replace: true });
+        navegarConFiltros('/estados', { search });
     };
 
     const ordenarPor = (columna: string) => {
         const direction = filtros.sort === columna && filtros.direction === 'asc' ? 'desc' : 'asc';
-        router.get('/estados', { ...filtros, sort: columna, direction }, { preserveState: true, replace: true });
+        navegarConFiltros('/estados', { ...filtros, sort: columna, direction });
     };
 
     const iconoOrden = (columna: string) => {
@@ -83,7 +84,7 @@ export default function EstadosIndex({ estados, filtros }: Props) {
 
     const eliminar = (estado: TipoCatalogo) => {
         if (confirm(`¿Eliminar el estado "${estado.nombre}"?`)) {
-            router.delete(`/estados/${estado.id}`, { preserveScroll: true });
+            router.delete(`/estados/${estado.hashid}`, { preserveScroll: true });
         }
     };
 
@@ -112,7 +113,7 @@ export default function EstadosIndex({ estados, filtros }: Props) {
                     <Input placeholder="Buscar por nombre..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
                     <Button type="submit" variant="secondary">Buscar</Button>
                     {filtros.search && (
-                        <Button type="button" variant="ghost" onClick={() => { setSearch(''); router.get('/estados', {}, { preserveState: true, replace: true }); }}>Limpiar</Button>
+                        <Button type="button" variant="ghost" onClick={() => { setSearch(''); navegarConFiltros('/estados', {}); }}>Limpiar</Button>
                     )}
                 </form>
 

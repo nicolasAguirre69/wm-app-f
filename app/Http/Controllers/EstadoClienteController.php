@@ -21,13 +21,13 @@ class EstadoClienteController extends Controller
     {
         $this->authorize('viewAny', EstadoCliente::class);
 
-        $estados = $this->estadoService->listar(
-            $request->only('search', 'sort', 'direction')
-        );
+        $filtros = $this->filtrosDe($request, ['search', 'sort', 'direction']);
+
+        $estados = $this->estadoService->listar($filtros);
 
         return Inertia::render('estados/index', [
             'estados' => $estados,
-            'filtros' => $request->only('search', 'sort', 'direction'),
+            'filtros' => $filtros,
         ]);
     }
 

@@ -23,15 +23,17 @@ class UserController extends Controller
         $actor = $request->user();
         $esSuper = $actor->is_super_admin;
 
+        $filtros = $this->filtrosDe($request, ['search', 'isp_id']);
+
         $paginador = User::query()
             ->where('is_super_admin', false) // el Super Admin no se lista aquí
             ->with('isp:id,nombre')
             // El admin de ISP solo ve los usuarios de su ISP.
             ->when(! $esSuper, fn ($q) => $q->where('isp_id', $actor->isp_id))
-            // Filtro por ISP (solo Super Admin).
-            ->when($esSuper && $request->filled('isp_id'), fn ($q) => $q->where('isp_id', $request->integer('isp_id')))
-            ->when($request->filled('search'), fn ($q) => $q->where(function ($sub) use ($request) {
-                $s = '%'.$request->string('search').'%';
+            // Filtro por ISP (solo Super Admin). El valor llega como hashid.
+            ->when($esSuper && ! empty($filtros['isp_id']), fn ($q) => $q->where('isp_id', Isp::decodeHashid($filtros['isp_id'])))
+            ->when(! empty($filtros['search']), fn ($q) => $q->where(function ($sub) use ($filtros) {
+                $s = '%'.$filtros['search'].'%';
                 $sub->where('name', 'like', $s)->orWhere('email', 'like', $s);
             }))
             ->orderBy('name')
@@ -48,6 +50,7 @@ class UserController extends Controller
 
         $paginador->through(fn (User $u) => [
             'id' => $u->id,
+            'hashid' => $u->hashid,
             'name' => $u->name,
             'email' => $u->email,
             'isp_id' => $u->isp_id,
@@ -58,7 +61,7 @@ class UserController extends Controller
 
         return Inertia::render('usuarios/index', [
             'usuarios' => $paginador,
-            'filtros' => $request->only('search', 'isp_id'),
+            'filtros' => $filtros,
             'esSuperAdmin' => $esSuper,
             'isps' => $esSuper ? Isp::orderBy('nombre')->get(['id', 'nombre']) : null,
             'roles' => Role::query()->pluck('name')->unique()->values(),

@@ -23,13 +23,13 @@ class PlanController extends Controller
     {
         $this->authorize('viewAny', Plan::class);
 
-        $planes = $this->planService->listar(
-            $request->only('search', 'sort', 'direction')
-        );
+        $filtros = $this->filtrosDe($request, ['search', 'sort', 'direction']);
+
+        $planes = $this->planService->listar($filtros);
 
         return Inertia::render('planes/index', [
             'planes' => $planes,
-            'filtros' => $request->only('search', 'sort', 'direction'),
+            'filtros' => $filtros,
             ...$this->catalogos(),
         ]);
     }

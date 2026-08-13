@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { usePermissions } from '@/hooks/use-permissions';
+import { navegarConFiltros } from '@/lib/filtros';
 import { clienteSchema } from '@/lib/validations/cliente';
 import AppLayout from '@/layouts/app-layout';
 import { type BarrioSelect, type BreadcrumbItem, type Cliente, type Comentario, type EnumOption, type OpcionIsp, type OpcionSelect, type Paginated, type SharedData } from '@/types';
@@ -72,7 +73,7 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
         setNuevoComentario('');
         setComentariosOpen(true);
         // Carga bajo demanda: solo trae la prop 'comentarios' de ese cliente.
-        router.get('/clientes', { ...filtros, comentarios_de: cliente.id }, { only: ['comentarios'], preserveState: true, preserveScroll: true });
+        navegar(filtros, { comentarios_de: cliente.hashid }, { only: ['comentarios'], preserveScroll: true });
     };
 
     const agregarComentario = (e: FormEvent) => {
@@ -80,7 +81,7 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
         if (! comentariosCliente || ! nuevoComentario.trim()) return;
         setEnviandoComentario(true);
         router.post(
-            `/clientes/${comentariosCliente.id}/comentarios`,
+            `/clientes/${comentariosCliente.hashid}/comentarios`,
             { tipo: tabComentario, contenido: nuevoComentario },
             {
                 preserveState: true,
@@ -91,8 +92,8 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
         );
     };
 
-    const borrarComentario = (id: number) => {
-        router.delete(`/comentarios/${id}`, { preserveState: true, preserveScroll: true });
+    const borrarComentario = (hashid: string) => {
+        router.delete(`/comentarios/${hashid}`, { preserveState: true, preserveScroll: true });
     };
 
     const iniciarEdicion = (c: Comentario) => {
@@ -100,9 +101,9 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
         setEditContenido(c.contenido);
     };
 
-    const guardarEdicion = (id: number) => {
+    const guardarEdicion = (hashid: string) => {
         if (! editContenido.trim()) return;
-        router.put(`/comentarios/${id}`, { contenido: editContenido }, {
+        router.put(`/comentarios/${hashid}`, { contenido: editContenido }, {
             preserveState: true,
             preserveScroll: true,
             onSuccess: () => setEditandoId(null),
@@ -170,21 +171,25 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
         }
         setClientErrors({});
         const opciones = { forceFormData: true, onSuccess: () => { setOpen(false); reset(); setEditando(null); } };
-        post(editando ? `/clientes/${editando.id}` : '/clientes', opciones);
+        post(editando ? `/clientes/${editando.hashid}` : '/clientes', opciones);
     };
+
+    // Empaqueta los filtros en el parámetro opaco ?f= (helper compartido).
+    const navegar = (nuevos: Filtros, extra: Record<string, string> = {}, opts: Record<string, unknown> = {}) =>
+        navegarConFiltros('/clientes', { ...nuevos }, extra, opts);
 
     const buscar = (e: FormEvent) => {
         e.preventDefault();
-        router.get('/clientes', { ...filtros, search }, { preserveState: true, replace: true });
+        navegar({ ...filtros, search });
     };
 
     const filtrar = (clave: 'isp_id' | 'facturable' | 'estado', valor: string) => {
-        router.get('/clientes', { ...filtros, [clave]: valor === TODOS ? undefined : valor }, { preserveState: true, replace: true });
+        navegar({ ...filtros, [clave]: valor === TODOS ? undefined : valor });
     };
 
     const ordenarPor = (columna: string) => {
         const direction = filtros.sort === columna && filtros.direction === 'asc' ? 'desc' : 'asc';
-        router.get('/clientes', { ...filtros, sort: columna, direction }, { preserveState: true, replace: true });
+        navegar({ ...filtros, sort: columna, direction });
     };
 
     const iconoOrden = (columna: string) => {
@@ -194,7 +199,7 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
 
     const eliminar = (c: Cliente) => {
         if (confirm(`¿Eliminar el cliente "${c.codigo_cliente}"?`)) {
-            router.delete(`/clientes/${c.id}`, { preserveScroll: true });
+            router.delete(`/clientes/${c.hashid}`, { preserveScroll: true });
         }
     };
 
@@ -202,9 +207,9 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
         if (c.facturable) {
             const motivo = prompt('Motivo para marcar como NO facturable:');
             if (motivo === null) return;
-            router.patch(`/clientes/${c.id}/facturable`, { facturable: false, motivo_no_facturable: motivo }, { preserveScroll: true });
+            router.patch(`/clientes/${c.hashid}/facturable`, { facturable: false, motivo_no_facturable: motivo }, { preserveScroll: true });
         } else {
-            router.patch(`/clientes/${c.id}/facturable`, { facturable: true }, { preserveScroll: true });
+            router.patch(`/clientes/${c.hashid}/facturable`, { facturable: true }, { preserveScroll: true });
         }
     };
 
@@ -212,7 +217,7 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
     const toggleEstado = (c: Cliente) => {
         const n = c.estado?.nombre;
         if (n !== 'Activo' && n !== 'Corte') return;
-        router.patch(`/clientes/${c.id}/estado`, {}, { preserveScroll: true });
+        router.patch(`/clientes/${c.hashid}/estado`, {}, { preserveScroll: true });
     };
 
     // Formatea el valor del plan como pesos colombianos, sin decimales.
@@ -268,7 +273,7 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
                             <SelectTrigger className="w-48"><SelectValue placeholder="ISP" /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value={TODOS}>Todas las ISP</SelectItem>
-                                {isps.map((isp) => (<SelectItem key={isp.id} value={String(isp.id)}>{isp.nombre}</SelectItem>))}
+                                {isps.map((isp) => (<SelectItem key={isp.id} value={isp.hashid ?? ''}>{isp.nombre}</SelectItem>))}
                             </SelectContent>
                         </Select>
                     )}
@@ -295,7 +300,7 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
                     )}
 
                     {(filtros.search || filtros.isp_id || filtros.facturable || filtros.estado) && (
-                        <Button type="button" variant="ghost" onClick={() => { setSearch(''); router.get('/clientes', {}, { preserveState: true, replace: true }); }}>Limpiar filtros</Button>
+                        <Button type="button" variant="ghost" onClick={() => { setSearch(''); navegar({}); }}>Limpiar filtros</Button>
                     )}
                 </div>
 
@@ -472,7 +477,7 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
                                             />
                                             <div className="flex justify-end gap-2">
                                                 <Button type="button" size="sm" variant="ghost" onClick={() => setEditandoId(null)}>Cancelar</Button>
-                                                <Button type="button" size="sm" onClick={() => guardarEdicion(c.id)}>Guardar</Button>
+                                                <Button type="button" size="sm" onClick={() => guardarEdicion(c.hashid)}>Guardar</Button>
                                             </div>
                                         </div>
                                     ) : (
@@ -485,7 +490,7 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
                                                         <button type="button" onClick={() => iniciarEdicion(c)} className="hover:underline">
                                                             Editar
                                                         </button>
-                                                        <button type="button" onClick={() => borrarComentario(c.id)} className="text-destructive hover:underline">
+                                                        <button type="button" onClick={() => borrarComentario(c.hashid)} className="text-destructive hover:underline">
                                                             Eliminar
                                                         </button>
                                                     </div>

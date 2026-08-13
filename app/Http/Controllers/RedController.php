@@ -22,13 +22,13 @@ class RedController extends Controller
     {
         $this->authorize('viewAny', Red::class);
 
-        $redes = $this->redService->listar(
-            $request->only('search', 'sort', 'direction')
-        );
+        $filtros = $this->filtrosDe($request, ['search', 'sort', 'direction']);
+
+        $redes = $this->redService->listar($filtros);
 
         return Inertia::render('redes/index', [
             'redes' => $redes,
-            'filtros' => $request->only('search', 'sort', 'direction'),
+            'filtros' => $filtros,
             'barrios' => $this->barriosDelIsp(),
         ]);
     }

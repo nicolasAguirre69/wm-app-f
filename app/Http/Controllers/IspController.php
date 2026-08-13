@@ -17,10 +17,12 @@ class IspController extends Controller
     {
         $this->authorize('viewAny', Isp::class);
 
+        $filtros = $this->filtrosDe($request, ['search']);
+
         $isps = Isp::withCount(['clientes', 'users'])
             ->when(
-                $request->filled('search'),
-                fn ($q) => $q->where('nombre', 'like', '%'.$request->string('search').'%')
+                ! empty($filtros['search']),
+                fn ($q) => $q->where('nombre', 'like', '%'.$filtros['search'].'%')
             )
             ->orderByDesc('tipo') // principal primero
             ->orderBy('nombre')
@@ -28,6 +30,7 @@ class IspController extends Controller
             ->withQueryString()
             ->through(fn (Isp $isp) => [
                 'id' => $isp->id,
+                'hashid' => $isp->hashid,
                 'nombre' => $isp->nombre,
                 'tipo' => $isp->tipo->value,
                 'tipo_label' => $isp->tipo->label(),
@@ -40,7 +43,7 @@ class IspController extends Controller
 
         return Inertia::render('isps/index', [
             'isps' => $isps,
-            'filtros' => $request->only('search'),
+            'filtros' => $filtros,
         ]);
     }
 

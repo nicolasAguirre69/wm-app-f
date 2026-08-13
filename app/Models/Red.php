@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\BelongsToIsp;
+use App\Traits\HasHashid;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,7 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Red extends Model
 {
-    use BelongsToIsp, HasFactory, SoftDeletes;
+    use BelongsToIsp, HasFactory, HasHashid, SoftDeletes;
 
     protected $table = 'redes';
 
@@ -28,8 +29,8 @@ class Red extends Model
         'numero',
     ];
 
-    // Incluye el atributo calculado 'nombre' al serializar a JSON (para React).
-    protected $appends = ['nombre'];
+    // Incluye los atributos calculados 'nombre' y 'hashid' al serializar a JSON.
+    protected $appends = ['nombre', 'hashid'];
 
     /**
      * Relación: la red pertenece a un barrio.

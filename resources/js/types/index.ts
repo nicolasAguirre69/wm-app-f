@@ -10,6 +10,7 @@ export interface Auth {
 
 export interface Ciudad {
     id: number;
+    hashid: string;
     nombre: string;
     codigo_dane: string | null;
     created_at: string;
@@ -18,6 +19,7 @@ export interface Ciudad {
 
 export interface Barrio {
     id: number;
+    hashid: string;
     isp_id: number;
     ciudad_id: number;
     nombre: string;
@@ -30,6 +32,7 @@ export interface Barrio {
 
 export interface Red {
     id: number;
+    hashid: string;
     isp_id: number;
     barrio_id: number;
     numero: number;
@@ -41,6 +44,7 @@ export interface Red {
 
 export interface TipoCatalogo {
     id: number;
+    hashid?: string; // presente cuando es un modelo con rutas (ej. estado de cliente)
     nombre: string;
     color?: string; // solo lo usan los estados de cliente
     en_estadisticas?: boolean; // solo estados: aparece en dashboard/filtros
@@ -48,6 +52,7 @@ export interface TipoCatalogo {
 
 export interface Plan {
     id: number;
+    hashid: string;
     isp_id: number;
     tipo_plan_id: number;
     tipo_servicio_id: number;
@@ -62,6 +67,7 @@ export interface Plan {
 
 export interface Cliente {
     id: number;
+    hashid: string;
     isp_id: number;
     codigo_cliente: string;
     tipo_identificacion: string;
@@ -116,6 +122,7 @@ export interface OpcionIsp {
 
 export interface Comentario {
     id: number;
+    hashid: string;
     tipo: 'seguimiento' | 'facturacion';
     contenido: string;
     autor: string | null;
@@ -123,9 +130,10 @@ export interface Comentario {
     puede_borrar: boolean;
 }
 
-// Opción ligera para selectores (id + nombre).
+// Opción ligera para selectores (id + nombre). hashid para filtros por URL.
 export interface OpcionSelect {
     id: number;
+    hashid?: string;
     nombre: string;
 }
 
@@ -184,6 +192,7 @@ export interface SharedData {
 
 export interface User {
     id: number;
+    hashid: string;
     name: string;
     email: string;
     avatar?: string;

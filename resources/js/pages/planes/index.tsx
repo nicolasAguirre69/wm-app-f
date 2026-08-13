@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { usePermissions } from '@/hooks/use-permissions';
+import { navegarConFiltros } from '@/lib/filtros';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type Paginated, type Plan, type SharedData, type TipoCatalogo } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
@@ -58,18 +59,18 @@ export default function PlanesIndex({ planes, filtros, tiposPlan, tiposServicio 
     const guardar: FormEventHandler = (e) => {
         e.preventDefault();
         const opciones = { onSuccess: () => { setOpen(false); reset(); setEditando(null); } };
-        if (editando) put(`/planes/${editando.id}`, opciones);
+        if (editando) put(`/planes/${editando.hashid}`, opciones);
         else post('/planes', opciones);
     };
 
     const buscar = (e: FormEvent) => {
         e.preventDefault();
-        router.get('/planes', { search }, { preserveState: true, replace: true });
+        navegarConFiltros('/planes', { search });
     };
 
     const ordenarPor = (columna: string) => {
         const direction = filtros.sort === columna && filtros.direction === 'asc' ? 'desc' : 'asc';
-        router.get('/planes', { ...filtros, sort: columna, direction }, { preserveState: true, replace: true });
+        navegarConFiltros('/planes', { ...filtros, sort: columna, direction });
     };
 
     const iconoOrden = (columna: string) => {
@@ -79,7 +80,7 @@ export default function PlanesIndex({ planes, filtros, tiposPlan, tiposServicio 
 
     const eliminar = (plan: Plan) => {
         if (confirm('¿Eliminar este plan?')) {
-            router.delete(`/planes/${plan.id}`, { preserveScroll: true });
+            router.delete(`/planes/${plan.hashid}`, { preserveScroll: true });
         }
     };
 
@@ -108,7 +109,7 @@ export default function PlanesIndex({ planes, filtros, tiposPlan, tiposServicio 
                     <Input placeholder="Buscar por tipo de plan o servicio..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
                     <Button type="submit" variant="secondary">Buscar</Button>
                     {filtros.search && (
-                        <Button type="button" variant="ghost" onClick={() => { setSearch(''); router.get('/planes', {}, { preserveState: true, replace: true }); }}>Limpiar</Button>
+                        <Button type="button" variant="ghost" onClick={() => { setSearch(''); navegarConFiltros('/planes', {}); }}>Limpiar</Button>
                     )}
                 </form>
 

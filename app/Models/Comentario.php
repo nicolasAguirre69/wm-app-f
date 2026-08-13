@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\TipoComentario;
 use App\Traits\BelongsToIsp;
+use App\Traits\HasHashid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Comentario extends Model
 {
-    use BelongsToIsp, SoftDeletes;
+    use BelongsToIsp, HasHashid, SoftDeletes;
 
     protected $table = 'comentarios';
 

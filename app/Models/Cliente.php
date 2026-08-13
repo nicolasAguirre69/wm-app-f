@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\TipoContribuyente;
 use App\Enums\TipoIdentificacion;
 use App\Traits\BelongsToIsp;
+use App\Traits\HasHashid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,9 +16,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Cliente extends Model
 {
-    use BelongsToIsp, HasFactory, SoftDeletes;
+    use BelongsToIsp, HasFactory, HasHashid, SoftDeletes;
 
     protected $table = 'clientes';
+
+    // Expone el código ofuscado (hashid) al frontend.
+    protected $appends = ['hashid'];
 
     protected $fillable = [
         'isp_id',

@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { navegarConFiltros } from '@/lib/filtros';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type OpcionSelect, type Paginated, type SharedData } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
@@ -19,6 +20,7 @@ const TODOS = 'todos';
 
 interface UsuarioRow {
     id: number;
+    hashid: string;
     name: string;
     email: string;
     isp_id: number;
@@ -62,22 +64,22 @@ export default function UsuariosIndex({ usuarios, filtros, esSuperAdmin, isps, r
     const guardar: FormEventHandler = (e) => {
         e.preventDefault();
         const opciones = { onSuccess: () => { setOpen(false); reset(); setEditando(null); } };
-        if (editando) put(`/usuarios/${editando.id}`, opciones);
+        if (editando) put(`/usuarios/${editando.hashid}`, opciones);
         else post('/usuarios', opciones);
     };
 
     const buscar = (e: FormEvent) => {
         e.preventDefault();
-        router.get('/usuarios', { ...filtros, search }, { preserveState: true, replace: true });
+        navegarConFiltros('/usuarios', { ...filtros, search });
     };
 
     const filtrarIsp = (valor: string) => {
-        router.get('/usuarios', { ...filtros, isp_id: valor === TODOS ? undefined : valor }, { preserveState: true, replace: true });
+        navegarConFiltros('/usuarios', { ...filtros, isp_id: valor === TODOS ? undefined : valor });
     };
 
     const eliminar = (u: UsuarioRow) => {
         if (confirm(`¿Eliminar al usuario "${u.name}"?`)) {
-            router.delete(`/usuarios/${u.id}`, { preserveScroll: true });
+            router.delete(`/usuarios/${u.hashid}`, { preserveScroll: true });
         }
     };
 
@@ -110,7 +112,7 @@ export default function UsuariosIndex({ usuarios, filtros, esSuperAdmin, isps, r
                             <SelectTrigger className="w-48"><SelectValue placeholder="ISP" /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value={TODOS}>Todas las ISP</SelectItem>
-                                {isps.map((isp) => (<SelectItem key={isp.id} value={String(isp.id)}>{isp.nombre}</SelectItem>))}
+                                {isps.map((isp) => (<SelectItem key={isp.id} value={isp.hashid ?? ''}>{isp.nombre}</SelectItem>))}
                             </SelectContent>
                         </Select>
                     )}

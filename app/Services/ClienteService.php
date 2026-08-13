@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Cliente;
 use App\Models\EstadoCliente;
+use App\Models\Isp;
 use App\Models\Scopes\IspScope;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -44,7 +45,7 @@ class ClienteService
             // Global Scope está desactivado; un usuario normal ya está acotado).
             ->when(
                 ! empty($filtros['isp_id']),
-                fn (Builder $q) => $q->where('isp_id', $filtros['isp_id'])
+                fn (Builder $q) => $q->where('isp_id', Isp::decodeHashid($filtros['isp_id']))
             )
             // Filtro por estado de facturación ('1' = sí, '0' = no).
             ->when(

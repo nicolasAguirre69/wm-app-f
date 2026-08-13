@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasHashid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,10 +15,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Ciudad extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasHashid, SoftDeletes;
 
     // 'Ciudad' se pluralizaría como 'ciudads' en inglés; lo corregimos.
     protected $table = 'ciudades';
+
+    protected $appends = ['hashid'];
 
     protected $fillable = [
         'nombre',

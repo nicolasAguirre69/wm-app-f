@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { usePermissions } from '@/hooks/use-permissions';
+import { navegarConFiltros } from '@/lib/filtros';
 import AppLayout from '@/layouts/app-layout';
 import { type BarrioOption, type BreadcrumbItem, type Paginated, type Red, type SharedData } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
@@ -48,7 +49,7 @@ export default function RedesIndex({ redes, filtros, barrios }: Props) {
     const guardar: FormEventHandler = (e) => {
         e.preventDefault();
         const opciones = { onSuccess: () => { setOpen(false); reset(); setEditando(null); } };
-        if (editando) put(`/redes/${editando.id}`, opciones);
+        if (editando) put(`/redes/${editando.hashid}`, opciones);
         else post('/redes', opciones);
     };
 
@@ -57,12 +58,12 @@ export default function RedesIndex({ redes, filtros, barrios }: Props) {
 
     const buscar = (e: FormEvent) => {
         e.preventDefault();
-        router.get('/redes', { search }, { preserveState: true, replace: true });
+        navegarConFiltros('/redes', { search });
     };
 
     const ordenarPor = (columna: string) => {
         const direction = filtros.sort === columna && filtros.direction === 'asc' ? 'desc' : 'asc';
-        router.get('/redes', { ...filtros, sort: columna, direction }, { preserveState: true, replace: true });
+        navegarConFiltros('/redes', { ...filtros, sort: columna, direction });
     };
 
     const iconoOrden = (columna: string) => {
@@ -72,7 +73,7 @@ export default function RedesIndex({ redes, filtros, barrios }: Props) {
 
     const eliminar = (red: Red) => {
         if (confirm(`¿Eliminar la red "${red.nombre}"?`)) {
-            router.delete(`/redes/${red.id}`, { preserveScroll: true });
+            router.delete(`/redes/${red.hashid}`, { preserveScroll: true });
         }
     };
 
@@ -101,7 +102,7 @@ export default function RedesIndex({ redes, filtros, barrios }: Props) {
                     <Input placeholder="Buscar por nombre..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
                     <Button type="submit" variant="secondary">Buscar</Button>
                     {filtros.search && (
-                        <Button type="button" variant="ghost" onClick={() => { setSearch(''); router.get('/redes', {}, { preserveState: true, replace: true }); }}>Limpiar</Button>
+                        <Button type="button" variant="ghost" onClick={() => { setSearch(''); navegarConFiltros('/redes', {}); }}>Limpiar</Button>
                     )}
                 </form>
 

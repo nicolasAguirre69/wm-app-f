@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { usePermissions } from '@/hooks/use-permissions';
+import { navegarConFiltros } from '@/lib/filtros';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type Ciudad, type Paginated, type SharedData } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
@@ -59,7 +60,7 @@ export default function CiudadesIndex({ ciudades, filtros }: Props) {
             },
         };
         if (editando) {
-            put(`/ciudades/${editando.id}`, opciones);
+            put(`/ciudades/${editando.hashid}`, opciones);
         } else {
             post('/ciudades', opciones);
         }
@@ -67,12 +68,12 @@ export default function CiudadesIndex({ ciudades, filtros }: Props) {
 
     const buscar = (e: FormEvent) => {
         e.preventDefault();
-        router.get('/ciudades', { search }, { preserveState: true, replace: true });
+        navegarConFiltros('/ciudades', { search });
     };
 
     const ordenarPor = (columna: string) => {
         const direction = filtros.sort === columna && filtros.direction === 'asc' ? 'desc' : 'asc';
-        router.get('/ciudades', { ...filtros, sort: columna, direction }, { preserveState: true, replace: true });
+        navegarConFiltros('/ciudades', { ...filtros, sort: columna, direction });
     };
 
     const iconoOrden = (columna: string) => {
@@ -82,7 +83,7 @@ export default function CiudadesIndex({ ciudades, filtros }: Props) {
 
     const eliminar = (ciudad: Ciudad) => {
         if (confirm(`¿Eliminar la ciudad "${ciudad.nombre}"?`)) {
-            router.delete(`/ciudades/${ciudad.id}`, { preserveScroll: true });
+            router.delete(`/ciudades/${ciudad.hashid}`, { preserveScroll: true });
         }
     };
 
@@ -113,7 +114,7 @@ export default function CiudadesIndex({ ciudades, filtros }: Props) {
                     <Input placeholder="Buscar por nombre..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
                     <Button type="submit" variant="secondary">Buscar</Button>
                     {filtros.search && (
-                        <Button type="button" variant="ghost" onClick={() => { setSearch(''); router.get('/ciudades', {}, { preserveState: true, replace: true }); }}>
+                        <Button type="button" variant="ghost" onClick={() => { setSearch(''); navegarConFiltros('/ciudades', {}); }}>
                             Limpiar
                         </Button>
                     )}

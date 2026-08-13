@@ -22,13 +22,13 @@ class BarrioController extends Controller
     {
         $this->authorize('viewAny', Barrio::class);
 
-        $barrios = $this->barrioService->listar(
-            $request->only('search', 'sort', 'direction')
-        );
+        $filtros = $this->filtrosDe($request, ['search', 'sort', 'direction']);
+
+        $barrios = $this->barrioService->listar($filtros);
 
         return Inertia::render('barrios/index', [
             'barrios' => $barrios,
-            'filtros' => $request->only('search', 'sort', 'direction'),
+            'filtros' => $filtros,
             'ciudades' => $this->ciudadesDelIsp(),
         ]);
     }

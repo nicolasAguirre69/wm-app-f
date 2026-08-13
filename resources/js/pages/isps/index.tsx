@@ -7,6 +7,7 @@ import InputError from '@/components/input-error';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { navegarConFiltros } from '@/lib/filtros';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type Paginated, type SharedData } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
@@ -17,6 +18,7 @@ const breadcrumbs: BreadcrumbItem[] = [{ title: 'ISPs', href: '/isps' }];
 
 interface IspRow {
     id: number;
+    hashid: string;
     nombre: string;
     tipo: string;
     tipo_label: string;
@@ -57,18 +59,18 @@ export default function IspsIndex({ isps, filtros }: Props) {
     const guardar: FormEventHandler = (e) => {
         e.preventDefault();
         const opciones = { onSuccess: () => { setOpen(false); reset(); setEditando(null); } };
-        if (editando) put(`/isps/${editando.id}`, opciones);
+        if (editando) put(`/isps/${editando.hashid}`, opciones);
         else post('/isps', opciones);
     };
 
     const buscar = (e: FormEvent) => {
         e.preventDefault();
-        router.get('/isps', { search }, { preserveState: true, replace: true });
+        navegarConFiltros('/isps', { search });
     };
 
     const eliminar = (isp: IspRow) => {
         if (confirm(`¿Eliminar el ISP "${isp.nombre}"?`)) {
-            router.delete(`/isps/${isp.id}`, { preserveScroll: true });
+            router.delete(`/isps/${isp.hashid}`, { preserveScroll: true });
         }
     };
 
@@ -100,7 +102,7 @@ export default function IspsIndex({ isps, filtros }: Props) {
                     <Input placeholder="Buscar por nombre..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
                     <Button type="submit" variant="secondary">Buscar</Button>
                     {filtros.search && (
-                        <Button type="button" variant="ghost" onClick={() => { setSearch(''); router.get('/isps', {}, { preserveState: true, replace: true }); }}>Limpiar</Button>
+                        <Button type="button" variant="ghost" onClick={() => { setSearch(''); navegarConFiltros('/isps', {}); }}>Limpiar</Button>
                     )}
                 </form>
 

@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { usePermissions } from '@/hooks/use-permissions';
+import { navegarConFiltros } from '@/lib/filtros';
 import AppLayout from '@/layouts/app-layout';
 import { type Barrio, type BreadcrumbItem, type OpcionSelect, type Paginated, type SharedData } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
@@ -51,18 +52,18 @@ export default function BarriosIndex({ barrios, filtros, ciudades }: Props) {
     const guardar: FormEventHandler = (e) => {
         e.preventDefault();
         const opciones = { onSuccess: () => { setOpen(false); reset(); setEditando(null); } };
-        if (editando) put(`/barrios/${editando.id}`, opciones);
+        if (editando) put(`/barrios/${editando.hashid}`, opciones);
         else post('/barrios', opciones);
     };
 
     const buscar = (e: FormEvent) => {
         e.preventDefault();
-        router.get('/barrios', { search }, { preserveState: true, replace: true });
+        navegarConFiltros('/barrios', { search });
     };
 
     const ordenarPor = (columna: string) => {
         const direction = filtros.sort === columna && filtros.direction === 'asc' ? 'desc' : 'asc';
-        router.get('/barrios', { ...filtros, sort: columna, direction }, { preserveState: true, replace: true });
+        navegarConFiltros('/barrios', { ...filtros, sort: columna, direction });
     };
 
     const iconoOrden = (columna: string) => {
@@ -72,7 +73,7 @@ export default function BarriosIndex({ barrios, filtros, ciudades }: Props) {
 
     const eliminar = (barrio: Barrio) => {
         if (confirm(`¿Eliminar el barrio "${barrio.nombre}"?`)) {
-            router.delete(`/barrios/${barrio.id}`, { preserveScroll: true });
+            router.delete(`/barrios/${barrio.hashid}`, { preserveScroll: true });
         }
     };
 
@@ -101,7 +102,7 @@ export default function BarriosIndex({ barrios, filtros, ciudades }: Props) {
                     <Input placeholder="Buscar por nombre o prefijo..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
                     <Button type="submit" variant="secondary">Buscar</Button>
                     {filtros.search && (
-                        <Button type="button" variant="ghost" onClick={() => { setSearch(''); router.get('/barrios', {}, { preserveState: true, replace: true }); }}>Limpiar</Button>
+                        <Button type="button" variant="ghost" onClick={() => { setSearch(''); navegarConFiltros('/barrios', {}); }}>Limpiar</Button>
                     )}
                 </form>
 

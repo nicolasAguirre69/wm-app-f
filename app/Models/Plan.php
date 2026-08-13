@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\BelongsToIsp;
+use App\Traits\HasHashid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,9 +16,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Plan extends Model
 {
-    use BelongsToIsp, HasFactory, SoftDeletes;
+    use BelongsToIsp, HasFactory, HasHashid, SoftDeletes;
 
     protected $table = 'planes';
+
+    protected $appends = ['hashid'];
 
     protected $fillable = [
         'isp_id',

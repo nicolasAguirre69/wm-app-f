@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\TipoIsp;
 use App\Observers\IspObserver;
+use App\Traits\HasHashid;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[ObservedBy(IspObserver::class)]
 class Isp extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasHashid, SoftDeletes;
+
+    protected $appends = ['hashid'];
 
     /**
      * Atributos asignables masivamente.

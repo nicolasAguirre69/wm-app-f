@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\BelongsToIsp;
+use App\Traits\HasHashid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,7 +14,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class EstadoCliente extends Model
 {
-    use BelongsToIsp, HasFactory, SoftDeletes;
+    use BelongsToIsp, HasFactory, HasHashid, SoftDeletes;
+
+    protected $appends = ['hashid'];
 
     /**
      * Paleta de colores UNIVERSAL para los estados (misma en todas las ISPs).

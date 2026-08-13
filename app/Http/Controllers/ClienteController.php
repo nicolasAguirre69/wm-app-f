@@ -28,13 +28,14 @@ class ClienteController extends Controller
     {
         $this->authorize('viewAny', Cliente::class);
 
-        $clientes = $this->clienteService->listar(
-            $request->only('search', 'sort', 'direction', 'isp_id', 'facturable', 'estado')
-        );
+        // Los filtros llegan empaquetados en el parámetro opaco ?f= (base64).
+        $filtros = $this->filtrosDe($request, ['search', 'sort', 'direction', 'isp_id', 'facturable', 'estado']);
+
+        $clientes = $this->clienteService->listar($filtros);
 
         return Inertia::render('clientes/index', [
             'clientes' => $clientes,
-            'filtros' => $request->only('search', 'sort', 'direction', 'isp_id', 'facturable', 'estado'),
+            'filtros' => $filtros,
             // Nombres de estado disponibles para filtrar (solo los marcados).
             'estadosFiltro' => EstadoCliente::where('en_estadisticas', true)
                 ->orderBy('nombre')->pluck('nombre')->unique()->values(),
@@ -57,7 +58,7 @@ class ClienteController extends Controller
      */
     private function comentariosDe(Request $request)
     {
-        $id = $request->integer('comentarios_de');
+        $id = Cliente::decodeHashid($request->input('comentarios_de'));
 
         if (! $id) {
             return collect();
@@ -78,6 +79,7 @@ class ClienteController extends Controller
             ->get()
             ->map(fn (Comentario $c) => [
                 'id' => $c->id,
+                'hashid' => $c->hashid,
                 'tipo' => $c->tipo->value,
                 'contenido' => $c->contenido,
                 'autor' => $c->autor?->name,

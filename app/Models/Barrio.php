@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Observers\BarrioObserver;
 use App\Traits\BelongsToIsp;
+use App\Traits\HasHashid;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,9 +19,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[ObservedBy(BarrioObserver::class)]
 class Barrio extends Model
 {
-    use BelongsToIsp, HasFactory, SoftDeletes;
+    use BelongsToIsp, HasFactory, HasHashid, SoftDeletes;
 
     protected $table = 'barrios';
+
+    protected $appends = ['hashid'];
 
     protected $fillable = [
         'isp_id',

@@ -28,13 +28,13 @@ class CiudadController extends Controller
         // Autorización explícita: usa CiudadPolicy@viewAny.
         $this->authorize('viewAny', Ciudad::class);
 
-        $ciudades = $this->ciudadService->listar(
-            $request->only('search', 'sort', 'direction')
-        );
+        $filtros = $this->filtrosDe($request, ['search', 'sort', 'direction']);
+
+        $ciudades = $this->ciudadService->listar($filtros);
 
         return Inertia::render('ciudades/index', [
             'ciudades' => $ciudades,
-            'filtros' => $request->only('search', 'sort', 'direction'),
+            'filtros' => $filtros,
         ]);
     }
 
