@@ -42,6 +42,16 @@ class IspObserver
      */
     public function created(Isp $isp): void
     {
+        self::aplicarDefaults($isp);
+    }
+
+    /**
+     * Crea/actualiza los estados y roles por defecto de un ISP. Es idempotente
+     * (usa firstOrCreate y syncPermissions), así que sirve tanto al crear el
+     * ISP como para RE-sincronizar ISPs existentes tras agregar permisos nuevos.
+     */
+    public static function aplicarDefaults(Isp $isp): void
+    {
         // Estados estándar del ISP.
         foreach (self::ESTADOS_POR_DEFECTO as $nombre => $color) {
             EstadoCliente::firstOrCreate(

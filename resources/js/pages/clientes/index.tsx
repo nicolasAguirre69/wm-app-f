@@ -197,6 +197,13 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
         return filtros.direction === 'asc' ? <ArrowUp className="ml-1 inline size-3.5" /> : <ArrowDown className="ml-1 inline size-3.5" />;
     };
 
+    // Cabecera clicable para ordenar por una columna.
+    const thOrden = (columna: string, etiqueta: string, clase = '') => (
+        <button type="button" onClick={() => ordenarPor(columna)} className={`flex items-center font-medium ${clase}`}>
+            {etiqueta} {iconoOrden(columna)}
+        </button>
+    );
+
     const eliminar = (c: Cliente) => {
         if (confirm(`¿Eliminar el cliente "${c.codigo_cliente}"?`)) {
             router.delete(`/clientes/${c.hashid}`, { preserveScroll: true });
@@ -264,7 +271,7 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
 
                 <div className="flex flex-wrap items-center gap-2">
                     <form onSubmit={buscar} className="flex gap-2">
-                        <Input placeholder="Buscar por código, identificación, nombre o correo..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-80 max-w-full" />
+                        <Input placeholder="Buscar por código, identificación, nombre completo o correo..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-80 max-w-full" />
                         <Button type="submit" variant="secondary">Buscar</Button>
                     </form>
 
@@ -321,18 +328,15 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>
-                                    <button type="button" onClick={() => ordenarPor('codigo_cliente')} className="flex items-center font-medium">
-                                        Código {iconoOrden('codigo_cliente')}
-                                    </button>
-                                </TableHead>
-                                <TableHead>Nombre</TableHead>
+                                <TableHead>{thOrden('codigo_cliente', 'Código')}</TableHead>
+                                <TableHead>{thOrden('nombre', 'Nombre')}</TableHead>
                                 {esSuperAdmin && <TableHead>ISP</TableHead>}
-                                <TableHead>Identificación</TableHead>
-                                <TableHead>Dirección</TableHead>
+                                <TableHead>{thOrden('identificacion', 'Identificación')}</TableHead>
+                                <TableHead>{thOrden('direccion', 'Dirección')}</TableHead>
                                 <TableHead>Servicio</TableHead>
-                                <TableHead className="text-right">Valor</TableHead>
-                                <TableHead>Estado</TableHead>
+                                <TableHead className="text-right">{thOrden('valor', 'Valor', 'w-full justify-end')}</TableHead>
+                                <TableHead className="text-center">{thOrden('dia_corte', 'Día de pago', 'w-full justify-center')}</TableHead>
+                                <TableHead>{thOrden('estado', 'Estado')}</TableHead>
                                 {esSuperAdmin && <TableHead>Facturable</TableHead>}
                                 <TableHead className="w-32 text-right">Acciones</TableHead>
                             </TableRow>
@@ -340,7 +344,7 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
                         <TableBody>
                             {clientes.data.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={esSuperAdmin ? 10 : 8} className="text-muted-foreground py-8 text-center">No hay clientes registrados.</TableCell>
+                                    <TableCell colSpan={esSuperAdmin ? 11 : 9} className="text-muted-foreground py-8 text-center">No hay clientes registrados.</TableCell>
                                 </TableRow>
                             ) : (
                                 clientes.data.map((cliente) => (
@@ -352,6 +356,7 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
                                         <TableCell className="max-w-48 truncate" title={cliente.direccion}>{cliente.direccion || '—'}</TableCell>
                                         <TableCell>{cliente.plan?.tipo_servicio?.nombre ?? '—'}</TableCell>
                                         <TableCell className="text-right tabular-nums">{formatearValor(cliente.plan?.valor)}</TableCell>
+                                        <TableCell className="text-center tabular-nums">{cliente.dia_corte ?? '—'}</TableCell>
                                         <TableCell>
                                             {can('clientes.editar') && (cliente.estado?.nombre === 'Activo' || cliente.estado?.nombre === 'Corte') ? (
                                                 <button type="button" onClick={() => toggleEstado(cliente)}

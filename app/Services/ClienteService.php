@@ -26,21 +26,27 @@ class ClienteService
      */
     public function listar(array $filtros): LengthAwarePaginator
     {
-        $paginador = Cliente::query()
+        $query = Cliente::query()
             // Cargamos las relaciones que mostramos en la tabla (evita N+1).
             // 'isp' se usa en la vista del Super Admin.
             ->with(['isp', 'ciudad', 'barrio', 'plan.tipoServicio', 'estado'])
-            ->when(
-                ! empty($filtros['search']),
-                fn (Builder $q) => $q->where(function (Builder $g) use ($filtros) {
-                    $s = '%'.$filtros['search'].'%';
-                    $g->where('codigo_cliente', 'like', $s)
-                        ->orWhere('identificacion', 'like', $s)
-                        ->orWhere('primer_nombre', 'like', $s)
-                        ->orWhere('primer_apellido', 'like', $s)
-                        ->orWhere('correo', 'like', $s);
-                })
-            )
+            // Búsqueda: cada palabra debe aparecer en algún campo. Así se puede
+            // buscar por NOMBRE COMPLETO ("Miguel Velazques") aunque el nombre
+            // esté partido en varias columnas. Portable (sin CONCAT del motor).
+            ->when(! empty($filtros['search']), function (Builder $q) use ($filtros) {
+                foreach (preg_split('/\s+/', trim($filtros['search'])) as $palabra) {
+                    $like = '%'.$palabra.'%';
+                    $q->where(function (Builder $g) use ($like) {
+                        $g->where('codigo_cliente', 'like', $like)
+                            ->orWhere('identificacion', 'like', $like)
+                            ->orWhere('primer_nombre', 'like', $like)
+                            ->orWhere('segundo_nombre', 'like', $like)
+                            ->orWhere('primer_apellido', 'like', $like)
+                            ->orWhere('segundo_apellido', 'like', $like)
+                            ->orWhere('correo', 'like', $like);
+                    });
+                }
+            })
             // Filtro por ISP (solo tiene efecto para el Super Admin, cuyo
             // Global Scope está desactivado; un usuario normal ya está acotado).
             ->when(
@@ -56,10 +62,11 @@ class ClienteService
             ->when(
                 ! empty($filtros['estado']),
                 fn (Builder $q) => $q->whereHas('estado', fn (Builder $e) => $e->where('nombre', $filtros['estado']))
-            )
-            ->orderBy($filtros['sort'] ?? 'created_at', $filtros['direction'] ?? 'desc')
-            ->paginate(10)
-            ->withQueryString();
+            );
+
+        $this->aplicarOrden($query, $filtros['sort'] ?? null, $filtros['direction'] ?? null);
+
+        $paginador = $query->paginate(10)->withQueryString();
 
         // BLINDAJE: si quien consulta NO es Super Admin, ocultamos el estado de
         // facturación por completo — ni siquiera viaja en el JSON al navegador.
@@ -68,6 +75,53 @@ class ClienteService
         }
 
         return $paginador;
+    }
+
+    /**
+     * Ordena la lista por una columna PERMITIDA (whitelist: evita inyección SQL
+     * porque el 'sort' viene del cliente). Las columnas de relación (valor,
+     * estado) usan una subconsulta correlacionada para no chocar con el scope
+     * de isp_id que se aplicaría en un join.
+     */
+    private function aplicarOrden(Builder $query, ?string $sort, ?string $direction): void
+    {
+        $dir = $direction === 'asc' ? 'asc' : 'desc';
+
+        // Columnas directas de la tabla clientes.
+        $directas = [
+            'codigo_cliente' => 'codigo_cliente',
+            'nombre' => 'primer_nombre',
+            'identificacion' => 'identificacion',
+            'direccion' => 'direccion',
+            'dia_corte' => 'dia_corte',
+        ];
+
+        if (isset($directas[$sort])) {
+            $query->orderBy($directas[$sort], $dir);
+
+            return;
+        }
+
+        if ($sort === 'valor') {
+            $query->orderBy(
+                DB::table('planes')->select('valor')->whereColumn('planes.id', 'clientes.plan_id')->limit(1),
+                $dir
+            );
+
+            return;
+        }
+
+        if ($sort === 'estado') {
+            $query->orderBy(
+                DB::table('estados_cliente')->select('nombre')->whereColumn('estados_cliente.id', 'clientes.estado_id')->limit(1),
+                $dir
+            );
+
+            return;
+        }
+
+        // Por defecto: más recientes primero.
+        $query->orderBy('created_at', 'desc');
     }
 
     /**
