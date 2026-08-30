@@ -332,6 +332,7 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
                                 <TableHead>{thOrden('nombre', 'Nombre')}</TableHead>
                                 {esSuperAdmin && <TableHead>ISP</TableHead>}
                                 <TableHead>{thOrden('identificacion', 'Identificación')}</TableHead>
+                                <TableHead>Teléfono</TableHead>
                                 <TableHead>{thOrden('direccion', 'Dirección')}</TableHead>
                                 <TableHead>Servicio</TableHead>
                                 <TableHead className="text-right">{thOrden('valor', 'Valor', 'w-full justify-end')}</TableHead>
@@ -344,7 +345,7 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
                         <TableBody>
                             {clientes.data.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={esSuperAdmin ? 11 : 9} className="text-muted-foreground py-8 text-center">No hay clientes registrados.</TableCell>
+                                    <TableCell colSpan={esSuperAdmin ? 12 : 10} className="text-muted-foreground py-8 text-center">No hay clientes registrados.</TableCell>
                                 </TableRow>
                             ) : (
                                 clientes.data.map((cliente) => (
@@ -353,6 +354,7 @@ export default function ClientesIndex({ clientes, filtros, isps, ciudades, barri
                                         <TableCell>{nombreCompleto(cliente)}</TableCell>
                                         {esSuperAdmin && <TableCell>{cliente.isp?.nombre ?? '—'}</TableCell>}
                                         <TableCell>{cliente.identificacion}</TableCell>
+                                        <TableCell className="whitespace-nowrap">{cliente.telefono_1}{cliente.telefono_2 ? ` / ${cliente.telefono_2}` : ''}</TableCell>
                                         <TableCell className="max-w-48 truncate" title={cliente.direccion}>{cliente.direccion || '—'}</TableCell>
                                         <TableCell>{cliente.plan?.tipo_servicio?.nombre ?? '—'}</TableCell>
                                         <TableCell className="text-right tabular-nums">{formatearValor(cliente.plan?.valor)}</TableCell>
