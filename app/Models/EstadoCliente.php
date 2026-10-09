@@ -10,7 +10,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * EstadoCliente: catálogo POR ISP (Activo, Suspendido, Retirado, Pendiente).
+ * EstadoCliente: catálogo POR ISP.
+ *
+ * Regla de negocio: en las ISP de tipo "cliente" un cliente solo puede estar
+ * Activo o Retirado (o también Corte, si la ISP tiene planes propios). La ISP
+ * principal maneja además otros estados (Suspendido, moras...).
  */
 class EstadoCliente extends Model
 {
@@ -30,6 +34,17 @@ class EstadoCliente extends Model
         '#8b5cf6', // morado
         '#6b7280', // gris
     ];
+
+    /**
+     * Únicos estados permitidos en las ISP de tipo "cliente".
+     */
+    public const PERMITIDOS_ISP_CLIENTE = ['Activo', 'Retirado'];
+
+    /**
+     * ISP cliente con planes propios (vende Internet, etc.): también puede
+     * cortar el servicio.
+     */
+    public const PERMITIDOS_ISP_PLANES_PROPIOS = ['Activo', 'Corte', 'Retirado'];
 
     protected $table = 'estados_cliente';
 

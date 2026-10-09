@@ -7,8 +7,12 @@ use App\Http\Controllers\ComentarioController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EstadoClienteController;
 use App\Http\Controllers\IspController;
+use App\Http\Controllers\PagoController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\RedController;
+use App\Http\Controllers\TicketController;
+use App\Http\Controllers\TipoFallaController;
+use App\Http\Controllers\TitularController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -47,6 +51,7 @@ Route::middleware(['auth', 'isp.active'])->group(function () {
 
     // Gestión de ISPs (solo Super Admin).
     Route::resource('isps', IspController::class)->except($sinFormularios);
+    Route::get('isps/{isp}/logo', [IspController::class, 'logo'])->name('isps.logo');
 
     // Gestión de Usuarios (Super Admin + Admin de ISP).
     Route::resource('usuarios', UserController::class)
@@ -65,11 +70,39 @@ Route::middleware(['auth', 'isp.active'])->group(function () {
     Route::patch('clientes/{cliente}/estado', [ClienteController::class, 'cambiarEstado'])
         ->name('clientes.estado');
 
+    // Documento digitalizado del servicio (guardado en la base; solo con permiso).
+    Route::get('clientes/{cliente}/documento', [ClienteController::class, 'documento'])
+        ->name('clientes.documento');
+
     // Detección de traslado: ¿esta identificación ya existe en otra ISP?
     Route::get('clientes/buscar-identificacion', [ClienteController::class, 'buscarPorIdentificacion'])
         ->name('clientes.buscar-identificacion');
 
     Route::resource('clientes', ClienteController::class)->except($sinFormularios);
+
+    // Pagos del servicio y comprobante en PDF (ISP principal y "Gestión
+    // completa"). No se borran: se anulan con motivo.
+    Route::get('clientes/{cliente}/pagos', [PagoController::class, 'index'])->name('pagos.index');
+    Route::post('clientes/{cliente}/pagos', [PagoController::class, 'store'])->name('pagos.store');
+    Route::get('pagos/{pago}/comprobante', [PagoController::class, 'comprobante'])->name('pagos.comprobante');
+    Route::post('pagos/{pago}/anular', [PagoController::class, 'anular'])->name('pagos.anular');
+
+    // Tickets de soporte (ISP principal y "Gestión completa"). No se borran:
+    // todo queda en su historial.
+    Route::get('tickets', [TicketController::class, 'index'])->name('tickets.index');
+    Route::post('tickets', [TicketController::class, 'store'])->name('tickets.store');
+    Route::get('tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
+    Route::put('tickets/{ticket}', [TicketController::class, 'update'])->name('tickets.update');
+    Route::post('tickets/{ticket}/comentarios', [TicketController::class, 'comentar'])->name('tickets.comentar');
+    Route::post('tickets/{ticket}/cerrar', [TicketController::class, 'cerrar'])->name('tickets.cerrar');
+    Route::post('tickets/{ticket}/reabrir', [TicketController::class, 'reabrir'])->name('tickets.reabrir');
+
+    Route::resource('tipos-falla', TipoFallaController::class)
+        ->parameters(['tipos-falla' => 'tipoFalla'])
+        ->only(['index', 'store', 'update', 'destroy']);
+
+    // Titular (la persona): editar sus datos personales. Aplica a todos sus servicios.
+    Route::put('titulares/{titular}', [TitularController::class, 'update'])->name('titulares.update');
 
     // Comentarios de clientes.
     Route::post('clientes/{cliente}/comentarios', [ComentarioController::class, 'store'])->name('comentarios.store');

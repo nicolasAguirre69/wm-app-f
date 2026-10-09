@@ -39,6 +39,7 @@ const valoresIniciales: ClienteFormValues = {
     estado_id: '',
     fecha_instalacion: '',
     dia_corte: '',
+    puerto_alquilado: false,
     documento_digitalizado: null,
 };
 

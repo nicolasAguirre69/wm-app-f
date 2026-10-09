@@ -11,12 +11,19 @@ use App\Models\Ciudad;
 use App\Models\Cliente;
 use App\Models\Comentario;
 use App\Models\EstadoCliente;
+use App\Models\Pago;
 use App\Models\Plan;
+use App\Models\Ticket;
+use App\Models\TipoFalla;
+use App\Enums\PrioridadTicket;
+use App\Models\Scopes\IspScope;
+use App\Models\Titular;
 use App\Services\ClienteService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Inertia\Response;
+use Illuminate\Http\Response;
+use Inertia\Response as InertiaResponse;
 
 class ClienteController extends Controller
 {
@@ -24,17 +31,19 @@ class ClienteController extends Controller
     {
     }
 
-    public function index(Request $request): Response
+    public function index(Request $request): InertiaResponse
     {
         $this->authorize('viewAny', Cliente::class);
 
         // Los filtros llegan empaquetados en el parámetro opaco ?f= (base64).
-        $filtros = $this->filtrosDe($request, ['search', 'sort', 'direction', 'isp_id', 'facturable', 'estado']);
+        $filtros = $this->filtrosDe($request, ['search', 'sort', 'direction', 'isp_id', 'facturable', 'estado', 'puerto']);
 
-        $clientes = $this->clienteService->listar($filtros);
+        // Lista de titulares (personas), cada uno con sus servicios.
+        ['titulares' => $titulares, 'totalServicios' => $totalServicios] = $this->clienteService->listar($filtros);
 
         return Inertia::render('clientes/index', [
-            'clientes' => $clientes,
+            'titulares' => $titulares,
+            'totalServicios' => $totalServicios,
             'filtros' => $filtros,
             // Nombres de estado disponibles para filtrar (solo los marcados).
             'estadosFiltro' => EstadoCliente::where('en_estadisticas', true)
@@ -46,8 +55,54 @@ class ClienteController extends Controller
             // Comentarios del cliente solicitado (carga bajo demanda).
             'comentarios' => $this->comentariosDe($request),
             'puedeFacturacion' => $request->user()->puedeVerFacturacion(),
+            // Puerto alquilado (filtro y columna): Super Admin o usuarios de la ISP principal.
+            'muestraPuerto' => $request->user()->is_super_admin || (bool) $request->user()->isp?->esPrincipal(),
+            // Tickets de soporte: se crean desde las opciones de cada servicio.
+            'tickets' => $this->catalogosTickets($request),
+            // Pagos y comprobantes: ISP del servicio que lo permiten (null: sin permiso).
+            'pagos' => $request->user()->can('viewAny', Pago::class)
+                ? ['isps' => $this->ispsConModulo()]
+                : null,
             ...$this->catalogos(),
         ]);
+    }
+
+    /**
+     * Tipos de falla y prioridades para el modal "Nuevo ticket" de cada
+     * servicio. null si el usuario no puede crear tickets (ISP "Solo TV" o
+     * sin permiso). Solo se envían tipos de ISP con el módulo: el botón
+     * aparece en los servicios cuya ISP tenga tipos de falla.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function catalogosTickets(Request $request): ?array
+    {
+        if ($request->user()->cannot('create', Ticket::class)) {
+            return null;
+        }
+
+        $ispsConModulo = $this->ispsConModulo();
+
+        return [
+            'tiposFalla' => TipoFalla::where('activo', true)
+                ->whereIn('isp_id', $ispsConModulo)
+                ->orderBy('nombre')
+                ->get(['id', 'isp_id', 'nombre']),
+            'prioridades' => PrioridadTicket::opciones(),
+        ];
+    }
+
+    /**
+     * ISP con los módulos de tickets y pagos: la principal y las de "Gestión
+     * completa".
+     *
+     * @return \Illuminate\Support\Collection<int, int>
+     */
+    private function ispsConModulo()
+    {
+        return \App\Models\Isp::query()
+            ->where(fn ($q) => $q->where('tipo', 'principal')->orWhere('categoria', 'gestion_completa'))
+            ->pluck('id');
     }
 
     /**
@@ -96,7 +151,13 @@ class ClienteController extends Controller
             $request->validated(),
             $request->file('documento_digitalizado'),
             $request->boolean('trasladar'),
+            $request->titular(),
         );
+
+        // Al agregar un servicio a un titular se vuelve a la misma página/filtro.
+        if ($request->titular()) {
+            return back()->with('success', 'Servicio agregado correctamente.');
+        }
 
         return redirect()
             ->route('clientes.index')
@@ -113,9 +174,7 @@ class ClienteController extends Controller
             $request->file('documento_digitalizado'),
         );
 
-        return redirect()
-            ->route('clientes.index')
-            ->with('success', 'Cliente actualizado correctamente.');
+        return back()->with('success', 'Servicio actualizado correctamente.');
     }
 
     public function destroy(Cliente $cliente): RedirectResponse
@@ -124,9 +183,29 @@ class ClienteController extends Controller
 
         $this->clienteService->eliminar($cliente);
 
-        return redirect()
-            ->route('clientes.index')
-            ->with('success', 'Cliente eliminado correctamente.');
+        return back()->with('success', 'Servicio eliminado correctamente.');
+    }
+
+    /**
+     * Muestra el documento digitalizado del servicio. Sale de la base (tabla
+     * documentos_cliente), solo para usuarios que pueden ver ese cliente.
+     */
+    public function documento(Cliente $cliente): Response
+    {
+        $this->authorize('view', $cliente);
+
+        $documento = $cliente->documento()->firstOrFail();
+
+        // Nombre seguro para la cabecera (sin comillas ni saltos de línea).
+        $nombre = str_replace(['"', "\r", "\n"], '', $documento->nombre_archivo);
+
+        return response($documento->contenido, 200, [
+            'Content-Type' => $documento->mime,
+            'Content-Length' => (string) $documento->tamano,
+            'Content-Disposition' => 'inline; filename="'.$nombre.'"',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, no-store',
+        ]);
     }
 
     /**
@@ -140,7 +219,13 @@ class ClienteController extends Controller
         $clientes = Cliente::query()
             ->where('facturable', true)
             ->whereHas('estado', fn ($q) => $q->where('nombre', 'Activo'))
-            ->with(['isp:id,id_producto', 'barrio:id,nombre', 'ciudad:id,codigo_dane'])
+            // De las ISP cliente, Web Master solo factura la TV: se excluyen sus
+            // servicios sin TV (p. ej. "solo Internet" de una ISP con planes propios).
+            ->where(fn ($q) => $q
+                ->whereHas('isp', fn ($i) => $i->where('tipo', \App\Enums\TipoIsp::Principal->value))
+                ->orWhereHas('plan.tipoServicio', fn ($t) => $t->where('nombre', 'like', '%TV%')))
+            // La ciudad (código DANE) se obtiene a través del barrio.
+            ->with(['isp:id,id_producto', 'barrio:id,nombre,ciudad_id', 'barrio.ciudad:id,codigo_dane'])
             ->get();
 
         $data = $clientes->map(fn (Cliente $c) => [
@@ -153,7 +238,7 @@ class ClienteController extends Controller
             'clienteCorreo' => $c->correo ?? '',
             'clienteBarrio' => $c->barrio?->nombre ?? '',
             'clienteDireccion' => $c->direccion,
-            'codigoMunicipioCliente' => $c->ciudad?->codigo_dane ?? '',
+            'codigoMunicipioCliente' => $c->barrio?->ciudad?->codigo_dane ?? '',
             'idProducto' => $c->isp?->id_producto,
         ])->values();
 
@@ -167,19 +252,12 @@ class ClienteController extends Controller
     }
 
     /**
-     * Mapea el tipo de contribuyente al texto que espera la facturación.
+     * Tipo de contribuyente con el nombre que usa el sistema de facturación
+     * (Regimen Comun, Regimen Simplificado, Gran Contribuyente, Tercero Exterior).
      */
-    private function mapearContribuyente(?\App\Enums\TipoContribuyente $tipo): string
+    private function mapearContribuyente(?TipoContribuyente $tipo): string
     {
-        return match ($tipo) {
-            \App\Enums\TipoContribuyente::RegimenComun => 'Regimen comun',
-            \App\Enums\TipoContribuyente::Natural => 'Persona natural',
-            \App\Enums\TipoContribuyente::Juridica => 'Persona juridica',
-            \App\Enums\TipoContribuyente::GranContribuyente => 'Gran contribuyente',
-            \App\Enums\TipoContribuyente::RegimenSimple => 'Regimen simplificado',
-            \App\Enums\TipoContribuyente::NoResponsableIva => 'No responsable de IVA',
-            default => '',
-        };
+        return $tipo?->label() ?? '';
     }
 
     /**
@@ -216,9 +294,11 @@ class ClienteController extends Controller
 
         $ispActual = $request->user()->isp_id;
 
-        $existente = Cliente::withoutGlobalScope(\App\Models\Scopes\IspScope::class)
-            ->where('identificacion', $request->input('identificacion'))
+        // Se busca la PERSONA (titular) con servicios en otra ISP.
+        $existente = Titular::withoutGlobalScope(IspScope::class)
+            ->where('identificacion', trim((string) $request->input('identificacion')))
             ->when($ispActual, fn ($q) => $q->where('isp_id', '!=', $ispActual))
+            ->whereHas('clientes', fn ($q) => $q->withoutGlobalScope(IspScope::class))
             ->with('isp:id,nombre')
             ->first();
 
@@ -245,22 +325,26 @@ class ClienteController extends Controller
     }
 
     /**
-     * Alterna el estado del cliente entre "Activo" y "Corte".
-     * Es la operación diaria de la oficina (cortar / reactivar el servicio)
-     * con un solo clic desde la lista. Cualquier otro estado no se toca.
+     * Alterna el estado del cliente con un solo clic desde la lista:
+     *   - ISP principal o con planes propios: "Activo" <-> "Corte".
+     *   - ISP cliente solo TV: "Activo" <-> "Retirado" (solo existen esos dos).
+     * Cualquier otro estado no se toca.
      */
     public function cambiarEstado(Cliente $cliente): RedirectResponse
     {
         $this->authorize('update', $cliente);
 
+        // Corte si la ISP lo maneja (principal o con planes propios); si no, Retirado.
+        $alterno = $cliente->isp?->estadoAlterno() ?? 'Retirado';
+
         $destino = match ($cliente->estado?->nombre) {
-            'Activo' => 'Corte',
-            'Corte' => 'Activo',
+            'Activo' => $alterno,
+            $alterno => 'Activo',
             default => null,
         };
 
         if ($destino === null) {
-            return back()->with('error', 'Solo se puede alternar entre Activo y Corte.');
+            return back()->with('error', "Solo se puede alternar entre Activo y {$alterno}.");
         }
 
         // Buscamos el estado destino DENTRO del mismo ISP del cliente.
@@ -299,6 +383,11 @@ class ClienteController extends Controller
                 ),
             ]),
             'estados' => EstadoCliente::orderBy('nombre')->get(['id', 'nombre', 'isp_id']),
+            // ISP principales: en las demás (ISP cliente) el plan de TV se asigna solo.
+            'ispsPrincipales' => \App\Models\Isp::where('tipo', \App\Enums\TipoIsp::Principal->value)->pluck('id')->map(fn ($id) => (int) $id),
+            // ISP que eligen el plan de cada cliente (principal + "Gestión completa").
+            'ispsPlanesPropios' => \App\Models\Isp::where('tipo', \App\Enums\TipoIsp::Principal->value)
+                ->orWhere('categoria', \App\Enums\CategoriaIsp::GestionCompleta->value)->pluck('id')->map(fn ($id) => (int) $id),
             'tiposIdentificacion' => TipoIdentificacion::opciones(),
             'tiposContribuyente' => TipoContribuyente::opciones(),
         ];

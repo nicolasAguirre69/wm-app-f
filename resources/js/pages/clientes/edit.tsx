@@ -30,18 +30,19 @@ export default function ClienteEdit({ cliente, ciudades, barrios, planes, estado
         tipo_contribuyente: cliente.tipo_contribuyente,
         primer_nombre: cliente.primer_nombre,
         segundo_nombre: cliente.segundo_nombre ?? '',
-        primer_apellido: cliente.primer_apellido,
-        segundo_apellido: cliente.segundo_apellido,
+        primer_apellido: cliente.primer_apellido ?? '',
+        segundo_apellido: cliente.segundo_apellido ?? '',
         telefono_1: cliente.telefono_1,
         telefono_2: cliente.telefono_2 ?? '',
-        correo: cliente.correo,
+        correo: cliente.correo ?? '',
         ciudad_id: String(cliente.ciudad_id),
         barrio_id: String(cliente.barrio_id),
         direccion: cliente.direccion,
         plan_id: String(cliente.plan_id),
         estado_id: String(cliente.estado_id),
-        fecha_instalacion: cliente.fecha_instalacion.slice(0, 10),
-        dia_corte: String(cliente.dia_corte),
+        fecha_instalacion: cliente.fecha_instalacion ? cliente.fecha_instalacion.slice(0, 10) : '',
+        dia_corte: cliente.dia_corte != null ? String(cliente.dia_corte) : '',
+        puerto_alquilado: cliente.puerto_alquilado ?? false,
         documento_digitalizado: null,
     });
 
@@ -87,7 +88,7 @@ export default function ClienteEdit({ cliente, ciudades, barrios, planes, estado
                         estados={estados}
                         tiposIdentificacion={tiposIdentificacion}
                         tiposContribuyente={tiposContribuyente}
-                        documentoActual={cliente.documento_digitalizado}
+                        documentoUrl={cliente.tiene_documento ? `/clientes/${cliente.hashid}/documento` : null}
                     />
 
                     <div className="flex gap-2">

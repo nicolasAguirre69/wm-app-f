@@ -57,6 +57,11 @@ class EstadoClienteController extends Controller
     {
         $this->authorize('delete', $estado);
 
+        // En una ISP cliente, Activo y Retirado son obligatorios: no se borran.
+        if (in_array($estado->nombre, $estado->isp?->estadosPermitidos() ?? [], true)) {
+            return back()->with('error', "El estado \"{$estado->nombre}\" es obligatorio en esta ISP y no se puede eliminar.");
+        }
+
         $this->estadoService->eliminar($estado);
 
         return redirect()

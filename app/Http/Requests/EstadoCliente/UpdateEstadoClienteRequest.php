@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\EstadoCliente;
 
+use App\Models\Isp;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -17,6 +18,10 @@ class UpdateEstadoClienteRequest extends FormRequest
      */
     public function rules(): array
     {
+        // En una ISP cliente solo existen los estados Activo y Retirado.
+        $ispId = $this->route('estado')->isp_id;
+        $permitidos = $ispId ? Isp::find($ispId)?->estadosPermitidos() : null;
+
         return [
             'nombre' => [
                 'required',
@@ -26,6 +31,7 @@ class UpdateEstadoClienteRequest extends FormRequest
                     ->where('isp_id', $this->user()->isp_id)
                     ->whereNull('deleted_at')
                     ->ignore($this->route('estado')),
+                ...($permitidos !== null ? [Rule::in($permitidos)] : []),
             ],
             'color' => ['required', Rule::in(\App\Models\EstadoCliente::COLORES)],
             'en_estadisticas' => ['boolean'],
@@ -40,6 +46,7 @@ class UpdateEstadoClienteRequest extends FormRequest
         return [
             'nombre.required' => 'El nombre del estado es obligatorio.',
             'nombre.unique' => 'Ya existe un estado con ese nombre en tu ISP.',
+            'nombre.in' => 'En esta ISP solo se permiten los estados: '.implode(', ', Isp::find($this->user()->isp_id)?->estadosPermitidos() ?? []).'.',
             'color.required' => 'El color es obligatorio.',
             'color.in' => 'El color debe ser uno de la paleta estándar.',
         ];

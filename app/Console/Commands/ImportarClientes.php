@@ -13,6 +13,7 @@ use App\Models\Plan;
 use App\Models\TipoPlan;
 use App\Models\TipoServicio;
 use Illuminate\Console\Command;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
 class ImportarClientes extends Command
@@ -91,12 +92,14 @@ class ImportarClientes extends Command
                 [$primerNombre, $segundoNombre] = $this->partir($nombres);
                 [$primerApellido, $segundoApellido] = $this->partir($apellidos);
 
-                Cliente::create([
+                // Separa persona (titular) y servicio; reutiliza el titular si ya existe.
+                Cliente::crearConTitular([
                     'isp_id' => $isp->id,
                     'codigo_cliente' => $this->siguienteCodigo($isp->id),
                     'tipo_identificacion' => $this->tipoIdValido($tipoId),
-                    'identificacion' => $identificacion ?: 'SIN-ID',
-                    'tipo_contribuyente' => TipoContribuyente::Natural->value,
+                    // Sin identificación: valor único, para no fundir personas distintas en un mismo titular.
+                    'identificacion' => $identificacion ?: 'SIN-ID-'.Str::upper(Str::random(8)),
+                    'tipo_contribuyente' => TipoContribuyente::RegimenComun->value, // Titular lo recalcula
                     'primer_nombre' => $primerNombre ?: 'N/A',
                     'segundo_nombre' => $segundoNombre,
                     'primer_apellido' => $primerApellido ?: 'N/A',
@@ -112,7 +115,6 @@ class ImportarClientes extends Command
                     'fecha_instalacion' => null,
                     'dia_corte' => null,
                     'usuario_creador_id' => null,
-                    'documento_digitalizado' => null,
                     'facturable' => false,
                 ]);
 

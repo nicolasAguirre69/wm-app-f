@@ -7,6 +7,8 @@ use App\Models\EstadoCliente;
 use App\Models\Isp;
 use App\Models\Plan;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Estadísticas del dashboard. Todas las consultas quedan aisladas por ISP
@@ -25,8 +27,15 @@ class DashboardService
             'esGlobal' => false,
             'totalClientes' => Cliente::count(),
 
-            'nuevosEsteMes' => Cliente::whereYear('created_at', Carbon::now()->year)
-                ->whereMonth('created_at', Carbon::now()->month)
+            // Servicios sobre puertos alquilados a una ISP externa (solo existe en
+            // la ISP principal; en las ISP cliente no se envía).
+            'puertosAlquilados' => Auth::user()?->isp?->esPrincipal()
+                ? Cliente::where('puerto_alquilado', true)->count()
+                : null,
+
+            // Por fecha de instalación, no por la fecha en que se cargó el cliente.
+            'nuevosEsteMes' => Cliente::whereYear('fecha_instalacion', Carbon::now()->year)
+                ->whereMonth('fecha_instalacion', Carbon::now()->month)
                 ->count(),
 
             // Un dato por estado (solo los marcados para estadísticas).
@@ -54,6 +63,9 @@ class DashboardService
                 ])
                 ->sortByDesc('total')
                 ->values(),
+
+            // Crecimiento: clientes instalados por mes (últimos 6 meses).
+            'crecimiento' => $this->crecimientoUltimosMeses(6),
         ];
     }
 
@@ -72,8 +84,11 @@ class DashboardService
             'totalClientes' => Cliente::count(),
             // Clientes listos para facturar (marcados como facturables).
             'facturables' => Cliente::where('facturable', true)->count(),
-            'nuevosEsteMes' => Cliente::whereYear('created_at', Carbon::now()->year)
-                ->whereMonth('created_at', Carbon::now()->month)
+            // Servicios sobre puertos alquilados a una ISP externa.
+            'puertosAlquilados' => Cliente::where('puerto_alquilado', true)->count(),
+            // Por fecha de instalación, no por la fecha en que se cargó el cliente.
+            'nuevosEsteMes' => Cliente::whereYear('fecha_instalacion', Carbon::now()->year)
+                ->whereMonth('fecha_instalacion', Carbon::now()->month)
                 ->count(),
 
             // Clientes por ISP.
@@ -112,13 +127,14 @@ class DashboardService
                 ->groupBy('estado')
                 ->map(fn ($filas) => $filas->map(fn ($f) => ['nombre' => $f->isp, 'total' => (int) $f->total])->values()),
 
-            // Crecimiento: nuevos clientes por mes (últimos 6 meses).
+            // Crecimiento: clientes instalados por mes (últimos 6 meses).
             'crecimiento' => $this->crecimientoUltimosMeses(6),
         ];
     }
 
     /**
-     * Nuevos clientes por mes en los últimos N meses (incluye meses en cero).
+     * Clientes instalados por mes en los últimos N meses (incluye meses en cero).
+     * Se agrupa por fecha_instalacion; los clientes sin esa fecha no cuentan.
      *
      * @return \Illuminate\Support\Collection<int, array{mes: string, total: int}>
      */
@@ -130,15 +146,21 @@ class DashboardService
             '09' => 'Sep', '10' => 'Oct', '11' => 'Nov', '12' => 'Dic',
         ];
 
-        // Conteo agrupado por 'YYYY-MM'.
-        $conteos = Cliente::selectRaw("DATE_FORMAT(created_at, '%Y-%m') as ym, count(*) as total")
-            ->where('created_at', '>=', Carbon::now()->subMonths($meses - 1)->startOfMonth())
+        // Conteo agrupado por 'YYYY-MM'. MySQL/MariaDB usan DATE_FORMAT; SQLite
+        // (las pruebas) no la tiene y usa strftime.
+        $mes = in_array(DB::getDriverName(), ['mysql', 'mariadb'], true)
+            ? "DATE_FORMAT(fecha_instalacion, '%Y-%m')"
+            : "strftime('%Y-%m', fecha_instalacion)";
+
+        $conteos = Cliente::selectRaw("{$mes} as ym, count(*) as total")
+            ->where('fecha_instalacion', '>=', Carbon::now()->subMonthsNoOverflow($meses - 1)->startOfMonth())
+            ->where('fecha_instalacion', '<=', Carbon::now()->endOfMonth())
             ->groupBy('ym')
             ->pluck('total', 'ym');
 
         // Recorremos los meses en orden y rellenamos los que no tengan clientes.
         return collect(range($meses - 1, 0))->map(function (int $i) use ($conteos, $abreviaturas) {
-            $fecha = Carbon::now()->subMonths($i);
+            $fecha = Carbon::now()->subMonthsNoOverflow($i);
             $ym = $fecha->format('Y-m');
 
             return [

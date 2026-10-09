@@ -3,7 +3,8 @@ import { LucideIcon } from 'lucide-react';
 export interface Auth {
     user: User;
     permissions: string[];
-    isp: { id: number; nombre: string } | null;
+    // gestiona_planes: false en las ISP "Solo TV" (no ven el menú Planes).
+    isp: { id: number; nombre: string; gestiona_planes?: boolean } | null;
 }
 
 // --- Tipos de dominio ---
@@ -65,36 +66,66 @@ export interface Plan {
     updated_at: string;
 }
 
+// Cliente = servicio. Los datos de la persona vienen del titular (tabla
+// `titulares`) pero el backend los entrega "planos" con los mismos nombres.
 export interface Cliente {
     id: number;
     hashid: string;
     isp_id: number;
+    titular_id: number;
     codigo_cliente: string;
     tipo_identificacion: string;
     identificacion: string;
     tipo_contribuyente: string;
     primer_nombre: string;
     segundo_nombre: string | null;
-    primer_apellido: string;
+    primer_apellido: string | null; // null en NIT (empresa)
     segundo_apellido: string | null;
     telefono_1: string;
     telefono_2: string | null;
     correo: string | null;
-    ciudad_id: number;
+    ciudad_id: number; // derivado del barrio (ya no es columna de clientes)
     barrio_id: number;
     direccion: string;
     plan_id: number;
     estado_id: number;
     fecha_instalacion: string | null;
     dia_corte: number | null;
-    documento_digitalizado: string | null;
+    // ¿Tiene documento digitalizado? (el archivo está en la base; se abre en /clientes/{hashid}/documento)
+    tiene_documento?: boolean;
+    tickets_abiertos?: number; // tickets de soporte abiertos del servicio
     facturable: boolean;
     motivo_no_facturable: string | null;
-    isp?: TipoCatalogo;
+    puerto_alquilado: boolean; // solo ISP principal: puerto alquilado a una ISP externa
+    isp?: TipoCatalogo & { tipo?: 'principal' | 'cliente' };
     ciudad?: TipoCatalogo;
-    barrio?: TipoCatalogo;
-    plan?: { id: number; valor: string; tipo_servicio?: TipoCatalogo };
+    barrio?: TipoCatalogo & { ciudad?: TipoCatalogo };
+    plan?: { id: number; valor: string; cantidad?: number | null; tipo_servicio?: TipoCatalogo; tipo_plan?: TipoCatalogo };
     estado?: TipoCatalogo;
+    created_at: string;
+    updated_at: string;
+}
+
+// Titular = la PERSONA (datos personales). Tiene uno o varios servicios
+// (clientes). Así se lista en la página de Clientes.
+export interface Titular {
+    id: number;
+    hashid: string;
+    isp_id: number;
+    tipo_identificacion: string;
+    identificacion: string;
+    tipo_contribuyente: string;
+    primer_nombre: string;
+    segundo_nombre: string | null;
+    primer_apellido: string | null; // null en NIT (empresa)
+    segundo_apellido: string | null;
+    telefono_1: string | null;
+    telefono_2: string | null;
+    correo: string | null;
+    isp?: TipoCatalogo & { tipo?: 'principal' | 'cliente' };
+    // Servicios del titular (solo campos del servicio; sin datos de la persona).
+    clientes: Cliente[];
+    servicios_count: number;
     created_at: string;
     updated_at: string;
 }

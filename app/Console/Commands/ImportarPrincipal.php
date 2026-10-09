@@ -11,6 +11,7 @@ use App\Models\Plan;
 use App\Models\TipoPlan;
 use App\Models\TipoServicio;
 use Illuminate\Console\Command;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -84,12 +85,15 @@ class ImportarPrincipal extends Command
                 $barrio = $this->obtenerBarrio($isp->id, $ciudad->id, $barrioNom ?: 'Sin asignar', $prefijo ?: 'GEN');
                 $plan = $this->obtenerPlan($isp->id, $tipoPlanBase, $tipoServicioBase, $planTipo, $planServ, $planMbps, $planValor);
 
-                Cliente::create([
+                // Separa persona (titular) y servicio; reutiliza el titular si ya existe.
+                Cliente::crearConTitular([
                     'isp_id' => $isp->id,
                     'codigo_cliente' => $codigo,
                     'tipo_identificacion' => in_array($tipoId, ['CC', 'CE', 'NIT', 'PA', 'TI', 'PPT', 'PEP']) ? $tipoId : 'CC',
-                    'identificacion' => $ident ?: 'SIN-ID',
-                    'tipo_contribuyente' => $tipoCon ?: 'natural',
+                    // Sin identificación: valor único, para no fundir personas distintas en un mismo titular.
+                    'identificacion' => $ident ?: 'SIN-ID-'.Str::upper(Str::random(8)),
+                    // Se deduce del tipo de identificación al guardar el titular.
+                    'tipo_contribuyente' => null,
                     'primer_nombre' => $n1 ?: 'N/A',
                     'segundo_nombre' => $n2 ?: null,
                     'primer_apellido' => $a1 ?: 'N/A',

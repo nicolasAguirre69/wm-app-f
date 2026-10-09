@@ -72,7 +72,7 @@
     ::before,
     ::backdrop,
     ::file-selector-button {
-        border-color: var(--color-gray-200, currentColor);
+        border-color: var(--border, currentColor);
     }
 }
 
@@ -113,38 +113,45 @@
 }
 
 .dark {
-    --background: hsl(0, 0%, 3.9%);
-    --foreground: hsl(0, 0%, 98%);
-    --card: hsl(0, 0%, 3.9%);
-    --card-foreground: hsl(0, 0%, 98%);
-    --popover: hsl(0, 0%, 3.9%);
-    --popover-foreground: hsl(0, 0%, 98%);
-    --primary: hsl(224, 70%, 60%);
-    --primary-foreground: hsl(0, 0%, 100%);
-    --secondary: hsl(0, 0%, 14.9%);
-    --secondary-foreground: hsl(0, 0%, 98%);
-    --muted: hsl(0, 0%, 6.9%);
-    --muted-foreground: hsl(0, 0%, 63.9%);
-    --accent: hsl(0, 0%, 14.9%);
-    --accent-foreground: hsl(0, 0%, 98%);
-    --destructive: hsl(0, 84%, 60%);
+    /*
+      Modo oscuro con capas: fondo < tarjetas < zonas "muted" < bordes, cada
+      una un poco más clara, para que tarjetas, tablas, desplegables e inputs
+      se distingan del fondo. Gris levemente azulado (combina con el primario).
+    */
+    color-scheme: dark; /* scrollbars, calendario de <input type="date">, etc. */
+
+    --background: hsl(222, 16%, 7%);
+    --foreground: hsl(210, 20%, 96%);
+    --card: hsl(222, 14%, 10%);
+    --card-foreground: hsl(210, 20%, 96%);
+    --popover: hsl(222, 14%, 11%);
+    --popover-foreground: hsl(210, 20%, 96%);
+    --primary: hsl(217, 85%, 64%);
+    --primary-foreground: hsl(222, 47%, 9%);
+    --secondary: hsl(220, 13%, 17%);
+    --secondary-foreground: hsl(210, 20%, 96%);
+    --muted: hsl(220, 13%, 15%);
+    --muted-foreground: hsl(218, 12%, 68%);
+    --accent: hsl(220, 13%, 18%);
+    --accent-foreground: hsl(210, 20%, 96%);
+    --destructive: hsl(0, 75%, 60%);
     --destructive-foreground: hsl(0, 0%, 98%);
-    --border: hsl(0, 0%, 14.9%);
-    --input: hsl(0, 0%, 14.9%);
-    --ring: hsl(0, 0%, 83.1%);
-    --chart-1: hsl(220, 70%, 50%);
+    --border: hsl(220, 12%, 21%);
+    --input: hsl(220, 12%, 25%);
+    --ring: hsl(217, 85%, 64%);
+    --chart-1: hsl(217, 80%, 60%);
     --chart-2: hsl(160, 60%, 45%);
     --chart-3: hsl(30, 80%, 55%);
-    --chart-4: hsl(280, 65%, 60%);
-    --chart-5: hsl(340, 75%, 55%);
-    --sidebar-background: hsl(0, 0%, 7%);
-    --sidebar-foreground: hsl(0, 0%, 80%);
-    --sidebar-primary: hsl(224, 70%, 60%);
-    --sidebar-primary-foreground: hsl(0, 0%, 100%);
-    --sidebar-accent: hsl(0, 0%, 15.9%);
-    --sidebar-accent-foreground: hsl(240, 4.8%, 95.9%);
-    --sidebar-border: hsl(0, 0%, 15.9%);
-    --sidebar-ring: hsl(217.2, 91.2%, 59.8%);
+    --chart-4: hsl(280, 65%, 62%);
+    --chart-5: hsl(340, 75%, 58%);
+    --sidebar-background: hsl(222, 18%, 5.5%);
+    --sidebar-foreground: hsl(215, 15%, 80%);
+    --sidebar-primary: hsl(217, 85%, 64%);
+    --sidebar-primary-foreground: hsl(222, 47%, 9%);
+    --sidebar-accent: hsl(220, 13%, 15%);
+    --sidebar-accent-foreground: hsl(210, 20%, 96%);
+    --sidebar-border: hsl(220, 12%, 15%);
+    --sidebar-ring: hsl(217, 85%, 64%);
 }
 
 @layer base {

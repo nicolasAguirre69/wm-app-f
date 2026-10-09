@@ -4,7 +4,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import { usePermissions } from '@/hooks/use-permissions';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { Building2, LayoutGrid, MapPin, Package, Tag, UserCog, Users } from 'lucide-react';
+import { Building2, LayoutGrid, LifeBuoy, MapPin, Package, Tag, UserCog, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 
 export function AppSidebar() {
@@ -17,6 +17,26 @@ export function AppSidebar() {
         { title: 'Dashboard', url: '/dashboard', icon: LayoutGrid },
         { title: 'Clientes', url: '/clientes', icon: Users },
     ];
+
+    // Soporte (tickets): ISP principal y "Gestión completa". El Super Admin
+    // ve los tickets de todas las ISP con módulo.
+    if (esSuperAdmin) {
+        mainNavItems.push({ title: 'Tickets', url: '/tickets', icon: LifeBuoy });
+    } else if (auth.isp?.gestiona_planes && can('tickets.ver')) {
+        if (can('tickets.tipos')) {
+            mainNavItems.push({
+                title: 'Soporte',
+                url: '#',
+                icon: LifeBuoy,
+                items: [
+                    { title: 'Tickets', url: '/tickets' },
+                    { title: 'Tipos de falla', url: '/tipos-falla' },
+                ],
+            });
+        } else {
+            mainNavItems.push({ title: 'Tickets', url: '/tickets', icon: LifeBuoy });
+        }
+    }
 
     if (esSuperAdmin) {
         // El Super Admin administra la plataforma: ISPs y usuarios agrupados.
@@ -41,7 +61,10 @@ export function AppSidebar() {
                 { title: 'Redes', url: '/redes' },
             ],
         });
-        mainNavItems.push({ title: 'Planes', url: '/planes', icon: Package });
+        // Planes: solo ISP que administran sus planes (no las "Solo TV").
+        if (auth.isp?.gestiona_planes) {
+            mainNavItems.push({ title: 'Planes', url: '/planes', icon: Package });
+        }
         mainNavItems.push({ title: 'Estados de cliente', url: '/estados', icon: Tag });
 
         // Usuarios: solo para Administradores de ISP (con permiso).

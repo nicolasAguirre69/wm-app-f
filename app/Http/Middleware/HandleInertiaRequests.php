@@ -50,8 +50,13 @@ class HandleInertiaRequests extends Middleware
                 'permissions' => $request->user()
                     ? $request->user()->getAllPermissions()->pluck('name')
                     : [],
-                // ISP del usuario (para mostrar su nombre en el menú).
-                'isp' => $request->user()?->isp?->only('id', 'nombre'),
+                // ISP del usuario (nombre en el menú; gestiona_planes oculta el
+                // menú Planes a las ISP "Solo TV").
+                'isp' => ($isp = $request->user()?->isp) ? [
+                    'id' => $isp->id,
+                    'nombre' => $isp->nombre,
+                    'gestiona_planes' => $isp->tienePlanesPropios(),
+                ] : null,
             ],
             // Mensajes flash de una sola vez (éxito / error).
             'flash' => [

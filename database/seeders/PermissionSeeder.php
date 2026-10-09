@@ -35,6 +35,10 @@ class PermissionSeeder extends Seeder
             'ciudades.ver', 'ciudades.crear', 'ciudades.editar', 'ciudades.eliminar',
             // Estados de cliente
             'estados.ver', 'estados.crear', 'estados.editar', 'estados.eliminar',
+            // Tickets de soporte (ISP principal y "Gestión completa")
+            'tickets.ver', 'tickets.crear', 'tickets.comentar', 'tickets.editar', 'tickets.cerrar', 'tickets.tipos',
+            // Pagos y comprobantes (ISP principal y "Gestión completa")
+            'pagos.ver', 'pagos.registrar', 'pagos.anular',
             // Dashboard
             'dashboard.ver',
             // Reportes

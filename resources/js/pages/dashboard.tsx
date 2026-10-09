@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
-import { Building2, Receipt, TrendingUp, UserPlus, Users } from 'lucide-react';
+import { Building2, Network, Receipt, TrendingUp, UserPlus, Users } from 'lucide-react';
 import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
@@ -35,7 +35,10 @@ interface Props {
     porIsp?: NombreTotal[];
     porEstadoGlobal?: EstadoStat[];
     desglosePorEstado?: Record<string, NombreTotal[]>;
+    // Ambos
     crecimiento?: MesStat[];
+    // Servicios sobre puertos alquilados a una ISP externa (null en ISP cliente).
+    puertosAlquilados?: number | null;
 }
 
 // Tarjeta de métrica simple.
@@ -74,6 +77,30 @@ function Barras({ datos }: { datos: NombreTotal[] }) {
     );
 }
 
+// Crecimiento mensual por fecha de instalación (gráfico de columnas con CSS).
+function Crecimiento({ datos }: { datos: MesStat[] }) {
+    const maxMes = Math.max(1, ...datos.map((m) => m.total));
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Crecimiento mensual (por instalación)</CardTitle>
+                <TrendingUp className="text-muted-foreground size-4" />
+            </CardHeader>
+            <CardContent>
+                <div className="flex h-40 items-end gap-2">
+                    {datos.map((m) => (
+                        <div key={m.mes} className="flex flex-1 flex-col items-center gap-1">
+                            <span className="text-muted-foreground text-xs">{m.total}</span>
+                            <div className="bg-primary w-full rounded-t transition-all" style={{ height: `${(m.total / maxMes) * 100}%`, minHeight: m.total > 0 ? '4px' : '0' }} />
+                            <span className="text-muted-foreground text-[10px]">{m.mes}</span>
+                        </div>
+                    ))}
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
 export default function Dashboard(props: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -84,8 +111,7 @@ export default function Dashboard(props: Props) {
 }
 
 // --- Vista del Super Admin (global) ---
-function DashboardGlobal({ totalIsps = 0, totalClientes = 0, facturables = 0, nuevosEsteMes = 0, porIsp = [], porEstadoGlobal = [], desglosePorEstado = {}, crecimiento = [] }: Props) {
-    const maxMes = Math.max(1, ...crecimiento.map((m) => m.total));
+function DashboardGlobal({ totalIsps = 0, totalClientes = 0, facturables = 0, nuevosEsteMes = 0, puertosAlquilados = 0, porIsp = [], porEstadoGlobal = [], desglosePorEstado = {}, crecimiento = [] }: Props) {
     // Estado seleccionado para el modal de desglose por ISP.
     const [estadoSel, setEstadoSel] = useState<EstadoStat | null>(null);
 
@@ -95,6 +121,7 @@ function DashboardGlobal({ totalIsps = 0, totalClientes = 0, facturables = 0, nu
                 <StatCard titulo="Total de ISPs" valor={totalIsps}><Building2 className="text-muted-foreground size-4" /></StatCard>
                 <StatCard titulo="Clientes en la plataforma" valor={totalClientes}><Users className="text-muted-foreground size-4" /></StatCard>
                 <StatCard titulo="Nuevos este mes" valor={nuevosEsteMes}><UserPlus className="text-muted-foreground size-4" /></StatCard>
+                <StatCard titulo="Puertos alquilados" valor={puertosAlquilados ?? 0}><Network className="text-muted-foreground size-4" /></StatCard>
 
                 {/* Listos para facturar (destacado) */}
                 <Card className="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950">
@@ -132,24 +159,7 @@ function DashboardGlobal({ totalIsps = 0, totalClientes = 0, facturables = 0, nu
                     <CardContent><Barras datos={porIsp} /></CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle>Crecimiento mensual</CardTitle>
-                        <TrendingUp className="text-muted-foreground size-4" />
-                    </CardHeader>
-                    <CardContent>
-                        {/* Gráfico de columnas simple con CSS */}
-                        <div className="flex h-40 items-end gap-2">
-                            {crecimiento.map((m) => (
-                                <div key={m.mes} className="flex flex-1 flex-col items-center gap-1">
-                                    <span className="text-muted-foreground text-xs">{m.total}</span>
-                                    <div className="bg-primary w-full rounded-t transition-all" style={{ height: `${(m.total / maxMes) * 100}%`, minHeight: m.total > 0 ? '4px' : '0' }} />
-                                    <span className="text-muted-foreground text-[10px]">{m.mes}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
+                <Crecimiento datos={crecimiento} />
             </div>
 
             {/* Modal: desglose por ISP del estado seleccionado */}
@@ -171,12 +181,16 @@ function DashboardGlobal({ totalIsps = 0, totalClientes = 0, facturables = 0, nu
 }
 
 // --- Vista del usuario ISP ---
-function DashboardIsp({ totalClientes = 0, nuevosEsteMes = 0, porEstado = [], porPlan = [] }: Props) {
+function DashboardIsp({ totalClientes = 0, nuevosEsteMes = 0, porEstado = [], porPlan = [], crecimiento = [], puertosAlquilados = null }: Props) {
     return (
         <div className="flex h-full flex-1 flex-col gap-6 p-4">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <StatCard titulo="Total de clientes" valor={totalClientes}><Users className="text-muted-foreground size-4" /></StatCard>
                 <StatCard titulo="Nuevos este mes" valor={nuevosEsteMes}><UserPlus className="text-muted-foreground size-4" /></StatCard>
+                {/* Solo ISP principal. */}
+                {puertosAlquilados != null && (
+                    <StatCard titulo="Puertos alquilados" valor={puertosAlquilados}><Network className="text-muted-foreground size-4" /></StatCard>
+                )}
                 {porEstado.map((estado) => (
                     <Card key={estado.nombre}>
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -188,10 +202,14 @@ function DashboardIsp({ totalClientes = 0, nuevosEsteMes = 0, porEstado = [], po
                 ))}
             </div>
 
-            <Card>
-                <CardHeader><CardTitle>Distribución por plan</CardTitle></CardHeader>
-                <CardContent><Barras datos={porPlan} /></CardContent>
-            </Card>
+            <div className="grid gap-6 lg:grid-cols-2">
+                <Card>
+                    <CardHeader><CardTitle>Distribución por plan</CardTitle></CardHeader>
+                    <CardContent><Barras datos={porPlan} /></CardContent>
+                </Card>
+
+                <Crecimiento datos={crecimiento} />
+            </div>
         </div>
     );
 }
