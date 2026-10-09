@@ -14,7 +14,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Laravel Fortify viene instalado pero la app no lo usa: el login, el
+        // perfil y la contraseña tienen rutas propias (routes/auth.php y
+        // routes/settings.php). Sin esto Fortify registra rutas con los mismos
+        // nombres (ej. password.update), "php artisan optimize" falla, y además
+        // quedarían expuestas rutas que no queremos (registro, recuperar clave).
+        if (class_exists(\Laravel\Fortify\Fortify::class)) {
+            \Laravel\Fortify\Fortify::ignoreRoutes();
+        }
     }
 
     /**
