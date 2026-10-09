@@ -5,13 +5,16 @@
         : '—';
     $tipoId = $titular?->tipo_identificacion?->value ?? '';
     $pesos = fn ($v) => '$ '.number_format((float) $v, 0, ',', '.');
-    // Logo subido en ISPs; si la ISP principal no tiene, se usa el de Web Master
-    // que viene con la aplicación (resources/images/logo-principal.png).
-    $archivoPrincipal = resource_path('images/logo-principal.png');
-    $logo = $isp->logo?->dataUri()
-        ?? ($isp->esPrincipal() && is_file($archivoPrincipal)
-            ? 'data:image/png;base64,'.base64_encode(file_get_contents($archivoPrincipal))
-            : null);
+    // Logo: el subido en ISPs; si la ISP principal no tiene (o el servidor no
+    // puede dibujarlo), el de Web Master que viene con la aplicación.
+    // dompdf necesita la extensión GD para los PNG; los JPG los dibuja sin GD,
+    // por eso el logo incluido es JPG (con el fondo azul del encabezado).
+    $subido = $isp->logo;
+    $logo = $subido && ($subido->mime === 'image/jpeg' || extension_loaded('gd')) ? $subido->dataUri() : null;
+    $archivoPrincipal = resource_path('images/logo-principal.jpg');
+    if (! $logo && $isp->esPrincipal() && is_file($archivoPrincipal)) {
+        $logo = 'data:image/jpeg;base64,'.base64_encode(file_get_contents($archivoPrincipal));
+    }
     $direccion = collect([$servicio?->direccion, $servicio?->barrio?->nombre, $servicio?->barrio?->ciudad?->nombre])->filter()->implode(' · ') ?: '—';
     $anulado = $pago->estaAnulado();
 @endphp
